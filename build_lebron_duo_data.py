@@ -216,7 +216,9 @@ def main():
         yrs = sorted(int(y) for y in rs_years[p])
         vals = metrics_for(p)
         d = dict(zip(keys, vals))
-        fame = d["asg"] * 3 + d["allnba"] * 2 + d["titles"] * 2 + d["mvp"] * 4 + (10 if yrs[-1] >= 2010 else 5 if yrs[-1] >= 1995 else 0)  # recognizability weight
+        # recognizability weight: accolades + recency + a big bump for NBA Top-75 / HoopsHype Top-78 names
+        top = 30 if (award_ct[p]["NBA Top-75"] or award_ct[p]["HoopsHype Top-78"]) else 0
+        fame = d["asg"] * 3 + d["allnba"] * 2 + d["titles"] * 2 + d["mvp"] * 4 + (10 if yrs[-1] >= 2010 else 5 if yrs[-1] >= 1995 else 0) + top
         players.append({
             "n": re.sub(r"\s*\(.*?\)", "", p),      # display name
             "y": [yrs[0] - 1, yrs[-1]],             # career span as season start/end years, e.g. [1984, 2003]

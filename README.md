@@ -5,6 +5,9 @@ Six All-Stars, five lives, 15 seconds. Pick the two players whose combined stat 
 - `index.html` - the whole game (no framework, no build step)
 - `lebron-duo-data.js` - generated data: every All-Star in the HoopsMatic All-Time Database with 40 career metrics, plus LeBron's marks
 - `build_lebron_duo_data.py` - regenerates the data file from the public nba-player-data JSON (`python build_lebron_duo_data.py`)
+- `og-beat-lebron.png` - social preview image (og:image)
 - `.github/workflows/update-data.yml` - optional daily rebuild via GitHub Actions
+
+Leaderboard: Cloudflare Worker `beat-lebron-leaderboard` (Durable Object, name-gated boards: today / this week / all-time / longest streaks). The URL lives in `CFG.lbApi` inside `index.html`; set it to `''` to run without a leaderboard.
 
 Questions are generated in the browser: the game picks a metric, a "big" player, a partner that pushes the pair narrowly past LeBron, and four fillers that all sit below the gap, which guarantees no other pair can reach LeBron's mark. Every question is verified before it is shown.

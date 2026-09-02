@@ -8,27 +8,17 @@
 <meta property="og:title" content="Beat LeBron: two All-Stars vs. the King">
 <meta property="og:description" content="Six All-Stars, five lives, 15 seconds. Pick the two players whose combined career beats LeBron James alone. Only one duo works.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://jsierrahoopshype.github.io/beat-lebron/og-beat-lebron.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://jsierrahoopshype.github.io/beat-lebron/og-beat-lebron.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f5f5f7;
-    --card: #ffffff;
-    --ink: #111114;
-    --ink-2: #4b4b55;
-    --ink-3: #8a8a96;
-    --line: #e2e2e8;
-    --gold: #f2b705;
-    --gold-ink: #6b4f00;
-    --purple: #552583;
-    --green: #1f9d55;
-    --green-bg: #e6f6ec;
-    --red: #d63b3b;
-    --red-bg: #fbe9e9;
-    --sel: #111114;
-    --radius: 16px;
-    --shadow: 0 1px 2px rgba(17,17,20,.06), 0 8px 24px rgba(17,17,20,.06);
+    --bg: #f5f5f7; --card: #ffffff; --ink: #111114; --ink-2: #4b4b55; --ink-3: #8a8a96; --line: #e2e2e8;
+    --gold: #f2b705; --purple: #552583; --green: #1f9d55; --green-bg: #e6f6ec; --red: #d63b3b; --red-bg: #fbe9e9;
+    --radius: 16px; --shadow: 0 1px 2px rgba(17,17,20,.06), 0 8px 24px rgba(17,17,20,.06);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: "DM Sans", system-ui, -apple-system, Segoe UI, sans-serif; font-size: 16px; line-height: 1.4; }
@@ -49,6 +39,8 @@
   .hero h1 { margin: 0; font-size: clamp(44px, 9vw, 72px); line-height: .92; font-weight: 800; text-transform: uppercase; }
   .hero h1 span { color: var(--gold); }
   .hero p { margin: 14px 0 0; font-size: 17px; color: #d8d8e0; max-width: 520px; }
+  .challenge { margin: 14px 0 0; background: rgba(242,183,5,.14); border: 1px solid rgba(242,183,5,.45); color: #ffe38a; border-radius: 12px; padding: 10px 14px; font-size: 15px; font-weight: 600; display: none; }
+  .challenge.on { display: block; }
   .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
   .rule { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px 12px 10px; }
   .rule b { display: block; font-size: 30px; line-height: 1; font-weight: 800; }
@@ -58,11 +50,13 @@
   .btn:hover { filter: brightness(1.05); }
   .btn:active { transform: scale(.97); }
   .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
-  .hero .btn.ghost { color: #fff; border-color: rgba(255,255,255,.25); }
+  .btn.sm { padding: 10px 16px; font-size: 14px; }
   .best { font-size: 14px; color: #b9b9c6; }
   .best b { color: #fff; }
   .example { margin-top: 18px; background: var(--card); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); font-size: 15px; color: var(--ink-2); }
   .example b { color: var(--ink); }
+  .todaybest { margin-top: 12px; font-size: 14px; color: var(--ink-2); text-align: center; min-height: 18px; }
+  .todaybest b { color: var(--ink); }
 
   /* ---------- game HUD ---------- */
   .hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
@@ -90,7 +84,7 @@
   .card { position: relative; background: var(--card); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px 8px 10px; text-align: center; box-shadow: var(--shadow); transition: transform .1s ease, border-color .15s ease, background .15s ease; user-select: none; -webkit-user-select: none; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; color: var(--ink); }
   .card:hover { transform: translateY(-2px); }
   .card:disabled { cursor: default; transform: none; }
-  .card.sel { border-color: var(--sel); background: #fffbe8; }
+  .card.sel { border-color: var(--ink); background: #fffbe8; }
   .card .pick { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; display: none; align-items: center; justify-content: center; }
   .card.sel .pick { display: flex; }
   .face { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; background: #e9e9ef; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #6d6d7a; flex: none; }
@@ -115,6 +109,7 @@
   .verdict .pts { float: right; font-weight: 800; font-size: 22px; color: var(--green); }
   .next { margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
   .next .hint { font-size: 12px; color: var(--ink-3); }
+  #btnNext { min-width: 120px; }
 
   /* ---------- game over ---------- */
   .over { background: var(--card); border-radius: 22px; padding: 26px 22px; box-shadow: var(--shadow); text-align: center; }
@@ -126,14 +121,56 @@
   .stat b { display: block; font-size: 26px; font-weight: 800; }
   .stat span { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin-top: 2px; }
   .newbest { display: inline-block; margin-top: 14px; background: var(--gold); color: var(--ink); font-weight: 800; padding: 6px 14px; border-radius: 999px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
-  .share { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .share button, .share a { border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 10px 16px; font-weight: 600; font-size: 14px; text-decoration: none; }
-  .share button:hover, .share a:hover { border-color: var(--ink); }
-  .again { margin-top: 18px; }
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: all .25s ease; pointer-events: none; }
-  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
   .foot { margin-top: 26px; font-size: 12px; color: var(--ink-3); text-align: center; }
   .foot a { color: inherit; }
+
+  /* ---------- leaderboard ---------- */
+  .lbp { margin-top: 16px; background: var(--card); border-radius: var(--radius); padding: 16px 16px 14px; box-shadow: var(--shadow); text-align: left; }
+  .lbp .hdr { font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  .lbp .rankline { margin: 8px 0 0; font-size: 14px; color: var(--ink-2); }
+  .lbp .rankline b { color: var(--ink); }
+  .lbp .rankline a { color: var(--ink-3); }
+  .gate { margin: 12px 0 4px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+  @media (max-width: 480px) { .gate { grid-template-columns: 1fr; } }
+  .gate input { border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 15px; min-width: 0; }
+  .gate input:focus { outline: none; border-color: var(--ink); }
+  .gatemsg { font-size: 13px; color: var(--ink-2); min-height: 16px; margin-top: 4px; }
+  .gatemsg.err { color: var(--red); }
+  .tabs { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .tab { border: 1.5px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .tab.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .rows { margin-top: 10px; }
+  .row { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .row:first-child { border-top: 0; }
+  .row .rk { color: var(--ink-3); font-weight: 700; }
+  .row .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .nm a { color: var(--ink-3); text-decoration: none; font-weight: 500; margin-left: 6px; font-size: 13px; }
+  .row .sc { font-weight: 800; }
+  .row .sc small { color: var(--ink-3); font-weight: 600; font-size: 12px; margin-left: 6px; }
+  .row.me { background: #fffbe8; margin: 0 -8px; padding: 7px 8px; border-radius: 8px; }
+  .empty { color: var(--ink-3); font-size: 14px; padding: 8px 0; }
+
+  /* ---------- share modal (73-9 style) ---------- */
+  .share-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(10,10,18,.82); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn .2s; overflow-y: auto; }
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  .share-box { position: relative; width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 14px; margin: auto; }
+  .share-img { width: 100%; max-height: 50vh; object-fit: contain; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
+  .share-x { position: absolute; top: -14px; right: -10px; width: 40px; height: 40px; border-radius: 50%; border: none; background: #fff; color: var(--ink); font-size: 24px; line-height: 1; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
+  .share-link { display: flex; width: 100%; gap: 8px; }
+  .share-url { flex: 1; min-width: 0; background: #1c1c26; border: 1px solid #3a3a4a; border-radius: 10px; color: #dcdce8; font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 10px 12px; }
+  .share-copybtn { flex: 0 0 auto; background: var(--gold); color: var(--ink); border: none; border-radius: 10px; padding: 0 16px; font-weight: 700; font-size: 14px; }
+  .share-social { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
+  .soc { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid #3a3a4a; background: #1c1c26; color: #fff; border-radius: 12px; padding: 11px 8px; font-weight: 600; font-size: 13px; }
+  .soc svg { width: 18px; height: 18px; }
+  .soc:hover { border-color: var(--gold); }
+  .share-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .share-btns .btn { padding: 11px 16px; font-size: 14px; }
+  .share-btns .btn.ghost { color: #fff; border-color: #3a3a4a; }
+  .share-msg { font-family: "JetBrains Mono", monospace; font-size: 12px; color: #9ee6b8; min-height: 16px; text-align: center; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: all .25s ease; pointer-events: none; z-index: 10001; }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
   @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
   .shake { animation: shake .35s ease; }
   @keyframes pop { 0%{transform:scale(.96)} 60%{transform:scale(1.03)} 100%{transform:scale(1)} }
@@ -152,6 +189,7 @@
     <div class="hero">
       <h1 class="cond">Two All-Stars<br>vs. <span>The King</span></h1>
       <p>We show you six All-Stars. Pick the two whose combined stats or accolades beat LeBron James alone. Only one duo gets there. Every other pair falls short.</p>
+      <div class="challenge" id="challenge"></div>
       <div class="rules">
         <div class="rule"><b class="cond">5</b><span>Lives</span></div>
         <div class="rule"><b class="cond">15s</b><span>Per question</span></div>
@@ -165,6 +203,7 @@
     <div class="example">
       <b>Example:</b> "Pick the two players who combine for more All-Star selections than LeBron James (22)." Michael Jordan (14) and Russell Westbrook (9) get you to 23. Jordan plus Blake Griffin (6) stalls at 20. Tap two names, the answer locks in on the second tap.
     </div>
+    <div class="todaybest" id="todayBest"></div>
     <div class="foot">Data: HoopsMatic All-Time Database, updated through the 2025-26 season. Career totals include the regular season and playoffs as labelled.</div>
   </section>
 
@@ -184,7 +223,7 @@
     </div>
     <div class="verdict" id="verdict"></div>
     <div class="next" id="nextRow" style="display:none">
-      <span class="hint" id="nextHint">Press Enter or Space</span>
+      <span class="hint" id="nextHint">Enter or Space</span>
       <button class="btn" id="btnNext">Next</button>
     </div>
     <div class="grid" id="grid"></div>
@@ -202,15 +241,13 @@
         <div class="stat"><b class="cond" id="stStreak">0</b><span>Best streak</span></div>
         <div class="stat"><b class="cond" id="stAvg">0.0s</b><span>Avg answer</span></div>
       </div>
-      <div class="share">
-        <button id="shCopy">Copy result</button>
-        <a id="shX" target="_blank" rel="noopener">Post on X</a>
-        <a id="shBsky" target="_blank" rel="noopener">Post on Bluesky</a>
-        <button id="shNative" style="display:none">Share…</button>
+      <div class="actions">
+        <button class="btn" id="btnShare">Share result</button>
+        <button class="btn ghost" id="btnAgain">Play again</button>
       </div>
-      <div class="again"><button class="btn" id="btnAgain">Play again</button></div>
     </div>
-    <div class="foot">Best score is saved on this device. <a href="https://hoopsmatic.com/">More NBA tools on HoopsMatic</a></div>
+    <div class="lbp" id="lbPanel"></div>
+    <div class="foot"><a href="https://hoopsmatic.com/">More NBA tools on HoopsMatic</a></div>
   </section>
 </div>
 <div class="toast" id="toast"></div>
@@ -224,30 +261,36 @@
   const CFG = {
     lives: 5,
     seconds: 15,
+    revealSeconds: 5,       // auto-advance after the reveal
     basePoints: 100,        // for a correct answer
     speedPoints: 100,       // extra, scaled by time left
-    minAllStar: 2,          // only players with this many All-Star nods enter the pool (recognizability)
+    minAllStar: 2,          // only players with this many All-Star nods enter the pool
+    fameExp: 4,             // steeper = more Jordan/Kobe/Curry, fewer one-time All-Stars
     upMargin: 0.10,         // winning duo may beat LeBron by at most this share of his mark (min +1)
     closeBand: 0.15,        // fillers are preferred within this share of LeBron's mark below the cut
-    recentPlayers: 24,      // avoid reusing a player within this many recent picks
-    recentMetrics: 6,       // avoid reusing a metric within this many questions
-    metricMinA: 4,          // metrics with fewer viable "big" players get weighted down
+    recentPlayers: 12,
+    recentMetrics: 6,
+    metricMinA: 4,
     headshotBase: 'https://jsierrahoopshype.github.io/nba-headshots/players/headshots/',
-    shareUrl: 'https://hoopsmatic.com/beat-lebron',
-    storageKey: 'hm_beat_lebron_best'
+    canonicalUrl: 'https://hoopsmatic.com/beat-lebron',   // used for share links once the hoopsmatic.com route exists
+    lbApi: 'https://beat-lebron-leaderboard.thejorgesierra.workers.dev',   // leaderboard Worker; '' disables
+    storageKey: 'hm_beat_lebron_best',
+    nameKey: 'hm_beat_lebron_name',
+    idKey: 'hm_beat_lebron_id'
   };
+  // Share links point at hoopsmatic.com only when the game is actually served from there;
+  // on GitHub Pages (or locally) they point at the page itself so nothing 404s.
+  const lbOverride = new URLSearchParams(location.search).get('lbapi'); if (lbOverride) CFG.lbApi = lbOverride;   // local testing only
+  const SHARE_BASE = /(^|\.)hoopsmatic\.com$/.test(location.hostname) ? CFG.canonicalUrl : (location.origin + location.pathname).replace(/index\.html$/, '');
 
   const DATA = window.LEBRON_DUO_DATA;
   const METRICS = DATA.metrics;
   const LB = DATA.lebron;
-  // Player of the Week / Month can't be won by any pair (LeBron's mark is more than double
-  // anyone else's), so such metrics are simply never viable; the generator skips them.
   const POOL = DATA.players.filter(p => p.v[metricIndex('asg')] >= CFG.minAllStar);
-
   function metricIndex(k) { for (let i = 0; i < METRICS.length; i++) if (METRICS[i].k === k) return i; return -1; }
 
-  // ---------------- metric viability ----------------
-  // For each metric: how many players could be the "big" half of a winning duo.
+  // For each metric: how many players could be the "big" half of a winning duo (0 = metric unplayable,
+  // e.g. Player of the Week, where LeBron's mark is more than double anyone else's).
   const metricWeight = METRICS.map((m, mi) => {
     const L = LB.v[mi];
     if (L <= 0) return 0;
@@ -263,29 +306,30 @@
     for (let i = 0; i < arr.length; i++) { r -= w[i]; if (r <= 0) return arr[i]; }
     return arr[arr.length - 1];
   }
-  const fame = p => Math.pow(p.f + 2, 2.5);   // steep: keeps 1950s one-time All-Stars rare
-  const fmt = n => n.toLocaleString('en-US');
+  const fame = p => Math.pow(p.f + 2, CFG.fameExp);
+  const fmt = n => Number(n).toLocaleString('en-US');
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
   function initials(n) { return n.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase(); }
+  const $ = id => document.getElementById(id);
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1600); }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
   // ---------------- question generator ----------------
-  // Structure of every question: A (biggest value) + B beats LeBron narrowly; the four fillers all sit
-  // below (LeBron - A), which guarantees that no other pair among the six can reach LeBron's mark.
-  const recentP = [];
-  const recentM = [];
+  // Every question: A (biggest value) + B beats LeBron narrowly; the four fillers all sit below
+  // (LeBron - A), which guarantees no other pair among the six can reach LeBron's mark.
+  const recentP = [], recentM = [];
   function markRecent(list, item, cap) { list.push(item); while (list.length > cap) list.shift(); }
-
   function generate() {
     for (let attempt = 0; attempt < 60; attempt++) {
       const mi = pickWeighted(METRICS.map((m, i) => i), i => recentM.includes(i) ? 0 : metricWeight[i]);
       const q = buildFor(mi, attempt < 40);
       if (q) { markRecent(recentM, mi, CFG.recentMetrics); q.players.forEach(p => markRecent(recentP, p.n, CFG.recentPlayers)); return q; }
     }
-    recentP.length = 0; recentM.length = 0;   // very unlikely: relax everything and retry
+    recentP.length = 0; recentM.length = 0;
     return generate();
   }
-
   function buildFor(mi, respectRecent) {
     const L = LB.v[mi];
     if (L <= 0 || metricWeight[mi] === 0) return null;
@@ -300,21 +344,18 @@
       const Bs = elig.filter(p => p !== A && fresh(p) && p.v[mi] > L - a && p.v[mi] <= a && a + p.v[mi] <= L + up);
       if (!Bs.length) continue;
       const B = pickWeighted(Bs, fame);
-      const cut = L - a;                                   // fillers must be strictly below this
+      const cut = L - a;
       const lo = Math.max(0, cut - Math.max(1, Math.ceil(L * CFG.closeBand)));
       let Fs = elig.filter(p => p !== A && p !== B && fresh(p) && p.v[mi] < cut && p.v[mi] >= lo);
       if (Fs.length < 4) Fs = elig.filter(p => p !== A && p !== B && fresh(p) && p.v[mi] < cut);
       if (Fs.length < 4) continue;
       const fill = [];
-      // two "near miss" fillers first (top half of the allowed band), then two from the whole band
-      const near = Fs.filter(p => p.v[mi] >= Math.ceil((cut - 1) / 2));
       const takeFrom = (arr) => { const p = pickWeighted(arr, x => fame(x) * (0.3 + (x.v[mi] + 1) / (cut + 1))); fill.push(p); Fs = Fs.filter(x => x !== p); return p; };
-      let nearPool = near.slice();
+      let nearPool = Fs.filter(p => p.v[mi] >= Math.ceil((cut - 1) / 2));
       for (let i = 0; i < 2 && nearPool.length; i++) { const p = takeFrom(nearPool); nearPool = nearPool.filter(x => x !== p); }
       while (fill.length < 4 && Fs.length) takeFrom(Fs);
       if (fill.length < 4) continue;
       const players = shuffle([A, B].concat(fill));
-      // hard verification: exactly one pair beats L, nothing ties
       let beats = 0, tie = 0;
       for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
         const s = players[i].v[mi] + players[j].v[mi];
@@ -326,51 +367,67 @@
     return null;
   }
 
+  // ---------------- identity (device id + saved name, like the 73-9 game) ----------------
+  function deviceId() {
+    let id = lsGet(CFG.idKey);
+    if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(16) + Math.random().toString(16).slice(2))).replace(/-/g, '').slice(0, 24); lsSet(CFG.idKey, id); }
+    return id;
+  }
+  function savedName() { try { return JSON.parse(lsGet(CFG.nameKey) || 'null') || { name: '', handle: '' }; } catch (e) { return { name: '', handle: '' }; } }
+  function saveName(name, handle) { lsSet(CFG.nameKey, JSON.stringify({ name, handle })); }
+
   // ---------------- state ----------------
-  const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], q: null, picks: [], locked: false, t0: 0, raf: 0, timeout: 0, over: false };
-  const $ = id => document.getElementById(id);
+  const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], q: null, picks: [], locked: false, t0: 0, raf: 0, auto: 0, gameStart: 0, lastClaim: null };
   const screens = { intro: $('sIntro'), game: $('sGame'), over: $('sOver') };
   function show(name) { Object.keys(screens).forEach(k => screens[k].classList.toggle('on', k === name)); window.scrollTo(0, 0); }
 
-  let best = 0;
-  try { best = parseInt(localStorage.getItem(CFG.storageKey) || '0', 10) || 0; } catch (e) {}
+  let best = parseInt(lsGet(CFG.storageKey) || '0', 10) || 0;
   function paintBest() {
     $('topBest').textContent = best ? 'Best ' + fmt(best) : '';
     $('introBest').innerHTML = best ? 'Your best: <b>' + fmt(best) + '</b>' : 'No score yet on this device';
   }
   paintBest();
 
+  // challenge landing: ?c=<score>&n=<name> from a shared link
+  (function () {
+    const p = new URLSearchParams(location.search);
+    const c = parseInt(p.get('c') || '', 10);
+    if (c > 0) {
+      const n = (p.get('n') || '').slice(0, 24);
+      $('challenge').innerHTML = (n ? esc(n) : 'Someone') + ' scored <b>' + fmt(c) + '</b> and sent you this. Beat it.';
+      $('challenge').classList.add('on');
+    }
+  })();
+
   // ---------------- HUD ----------------
   const HEART = '<svg class="life" viewBox="0 0 24 24" fill="#d63b3b"><path d="M12 21s-7.5-4.6-9.8-9.1C.6 8.6 2.4 4.5 6.3 4.1c2.1-.2 3.9.9 5.7 3 1.8-2.1 3.6-3.2 5.7-3 3.9.4 5.7 4.5 4.1 7.8C19.5 16.4 12 21 12 21z"/></svg>';
   function paintHud() {
-    $('lives').innerHTML = Array.from({ length: CFG.lives }, (_, i) => HEART).join('');
+    $('lives').innerHTML = Array.from({ length: CFG.lives }, () => HEART).join('');
     Array.from($('lives').children).forEach((el, i) => el.classList.toggle('lost', i >= S.lives));
     $('score').textContent = fmt(S.score);
     $('qnum').textContent = 'Q' + S.qn;
   }
-
-  // ---------------- headshots ----------------
   function faceHtml(p) {
     if (!p.h) return '<div class="face">' + esc(initials(p.n)) + '</div>';
     const f2 = CFG.headshotBase + 'face2/' + p.h, f1 = CFG.headshotBase + 'face/' + p.h;
-    return '<div class="face"><img alt="" loading="eager" src="' + f2 + '" data-alt="' + f1 + '" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt=\'\';}else{this.parentNode.textContent=\'' + esc(initials(p.n)) + '\';}"></div>';
+    return '<div class="face"><img alt="" src="' + f2 + '" data-alt="' + f1 + '" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt=\'\';}else{this.parentNode.textContent=\'' + esc(initials(p.n)) + '\';}"></div>';
   }
   if (LB.h) $('lbFace').src = CFG.headshotBase + 'face2/' + LB.h; else $('lbFace').style.display = 'none';
 
   // ---------------- game flow ----------------
   function start() {
-    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], over: false });
+    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], gameStart: performance.now(), lastClaim: null });
     recentP.length = 0; recentM.length = 0;
+    clearTimeout(S.auto);
     show('game');
     nextQuestion();
   }
-
   function nextQuestion() {
+    clearTimeout(S.auto);
     S.q = generate();
     S.qn++; S.picks = []; S.locked = false;
     paintHud();
-    const m = S.q.metric;
-    $('qText').innerHTML = 'Pick the two players who combine for more <mark>' + esc(m.label) + '</mark> than LeBron James';
+    $('qText').innerHTML = 'Pick the two players who combine for more <mark>' + esc(S.q.metric.label) + '</mark> than LeBron James';
     $('lbVal').textContent = fmt(S.q.L);
     $('verdict').className = 'verdict'; $('verdict').innerHTML = '';
     $('qBlock').classList.remove('hide');
@@ -385,7 +442,6 @@
     });
     startTimer();
   }
-
   function tap(i, el) {
     if (S.locked) return;
     const k = S.picks.indexOf(i);
@@ -394,7 +450,6 @@
     if (S.picks.length === 2) resolve(false);
   }
   function renumber() { Array.from($('grid').children).forEach(c => { const k = S.picks.indexOf(+c.dataset.i); c.querySelector('.pick').textContent = k >= 0 ? k + 1 : ''; }); }
-
   function startTimer() {
     S.t0 = performance.now();
     const bar = $('timerBar'), tl = $('tleft'), tw = $('timer');
@@ -419,18 +474,13 @@
     const q = S.q, mi = q.mi;
     const winIdx = q.players.map((p, i) => q.win.includes(p) ? i : -1).filter(i => i >= 0);
     const right = !timedOut && S.picks.length === 2 && winIdx.every(i => S.picks.includes(i));
-    const cards = Array.from($('grid').children);
-    cards.forEach((c, i) => {
+    Array.from($('grid').children).forEach((c, i) => {
       c.disabled = true; c.classList.add('reveal'); c.classList.remove('sel');
-      if (winIdx.includes(i)) c.classList.add('win');
-      else if (S.picks.includes(i)) c.classList.add('miss');
-      else c.classList.add('dim');
+      if (winIdx.includes(i)) c.classList.add('win'); else if (S.picks.includes(i)) c.classList.add('miss'); else c.classList.add('dim');
     });
-    const v = $('verdict'); v.classList.add('on');
-    $('qBlock').classList.add('hide');
+    const v = $('verdict'); v.classList.add('on'); $('qBlock').classList.add('hide');
     const A = q.win[0], B = q.win[1];
     const winLine = '<b>' + esc(A.n) + '</b> (' + fmt(A.v[mi]) + ') + <b>' + esc(B.n) + '</b> (' + fmt(B.v[mi]) + ') = <b>' + fmt(q.sum) + '</b> vs. LeBron\'s ' + fmt(q.L) + '.';
-    // closest non-winning pair (always the big player plus the best filler)
     let miss = null;
     for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
       const s = q.players[i].v[mi] + q.players[j].v[mi];
@@ -441,6 +491,7 @@
     if (right) {
       pts = CFG.basePoints + Math.round(CFG.speedPoints * (1 - elapsed / CFG.seconds));
       S.score += pts; S.correct++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); S.times.push(elapsed);
+      S.found.push({ a: A.n, b: B.n, sum: q.sum, L: q.L, label: q.metric.label, pts });
       v.innerHTML = '<span class="pts mono">+' + pts + '</span><h3 class="ok cond">Correct</h3><p>' + winLine + ' Answered in ' + elapsed.toFixed(1) + 's.' + missLine + '</p>';
       v.classList.add('pop');
     } else {
@@ -455,46 +506,251 @@
     }
     paintHud();
     $('nextRow').style.display = 'flex';
-    $('btnNext').textContent = S.lives > 0 ? 'Next' : 'See final score';
     $('btnNext').focus({ preventScroll: true });
+    // auto-advance: the Next button counts down and fires by itself
+    const label = S.lives > 0 ? 'Next' : 'Final score';
+    let left = CFG.revealSeconds;
+    const paint = () => { $('btnNext').textContent = label + ' · ' + left; };
+    paint();
+    const step = () => { left--; if (left <= 0) { advance(); return; } paint(); S.auto = setTimeout(step, 1000); };
+    S.auto = setTimeout(step, 1000);
   }
-
   function advance() {
     if (!S.locked) return;
+    clearTimeout(S.auto);
     if (S.lives > 0) nextQuestion(); else gameOver();
   }
 
+  // ---------------- game over ----------------
   function gameOver() {
-    S.over = true;
     const isBest = S.score > best;
-    if (isBest) { best = S.score; try { localStorage.setItem(CFG.storageKey, String(best)); } catch (e) {} paintBest(); }
+    if (isBest) { best = S.score; lsSet(CFG.storageKey, String(best)); paintBest(); }
     $('finalScore').textContent = fmt(S.score);
     $('finalSub').textContent = S.correct === 1 ? '1 duo found before your lives ran out' : S.correct + ' duos found before your lives ran out';
     $('newBest').innerHTML = isBest && S.score > 0 ? '<span class="newbest">New best on this device</span>' : '';
     $('stCorrect').textContent = S.correct;
     $('stStreak').textContent = S.bestStreak;
     $('stAvg').textContent = S.times.length ? (S.times.reduce((a, b) => a + b, 0) / S.times.length).toFixed(1) + 's' : '–';
-    const text = 'I scored ' + fmt(S.score) + ' points in Beat LeBron, finding ' + S.correct + ' All-Star duo' + (S.correct === 1 ? '' : 's') + ' that out-stat LeBron James before running out of lives. Can you beat that?';
-    $('shX').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(CFG.shareUrl);
-    $('shBsky').href = 'https://bsky.app/intent/compose?text=' + encodeURIComponent(text + ' ' + CFG.shareUrl);
-    $('shCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(text + ' ' + CFG.shareUrl).then(() => toast('Copied')); };
-    if (navigator.share) { $('shNative').style.display = ''; $('shNative').onclick = () => navigator.share({ text, url: CFG.shareUrl }).catch(() => {}); }
     show('over');
+    lbInit();
   }
 
-  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1600); }
+  // ---------------- sharing (73-9 style: card preview, link, 6 platforms, download/copy/native) ----------------
+  function shareText() {
+    const n = S.correct;
+    return 'I scored ' + fmt(S.score) + ' points in Beat LeBron, finding ' + n + ' All-Star duo' + (n === 1 ? '' : 's') + ' that out-stat LeBron James before running out of lives. Can you beat that?';
+  }
+  function shareURL() {
+    const nm = savedName().name;
+    return SHARE_BASE + '?c=' + S.score + (nm ? '&n=' + encodeURIComponent(nm) : '');
+  }
+  function socialURL(kind) {
+    const url = shareURL(), text = shareText();
+    const u = encodeURIComponent(url), t = encodeURIComponent(text), tu = encodeURIComponent(text + ' ' + url);
+    switch (kind) {
+      case 'x': return 'https://twitter.com/intent/tweet?text=' + t + '&url=' + u;
+      case 'bsky': return 'https://bsky.app/intent/compose?text=' + tu;
+      case 'fb': return 'https://www.facebook.com/sharer/sharer.php?u=' + u + '&quote=' + t;
+      case 'wa': return 'https://wa.me/?text=' + tu;
+      case 'reddit': return 'https://www.reddit.com/submit?url=' + u + '&title=' + t;
+      case 'telegram': return 'https://t.me/share/url?url=' + u + '&text=' + t;
+    }
+    return url;
+  }
+  function rr(ctx, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function fitText(ctx, text, maxW, weight, startPx, family, minPx) { let s = startPx; ctx.font = weight + ' ' + s + 'px ' + family; while (s > minPx && ctx.measureText(text).width > maxW) { s -= 2; ctx.font = weight + ' ' + s + 'px ' + family; } }
+  function ellip(ctx, text, maxW) { if (ctx.measureText(text).width <= maxW) return text; let t = text; while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1); return t + '…'; }
+  function loadFace(file) {
+    return new Promise(res => {
+      if (!file) return res(null);
+      const im = new Image(); im.crossOrigin = 'anonymous';
+      im.onload = () => res(im); im.onerror = () => res(null);
+      im.src = CFG.headshotBase + 'face2/' + file;
+    });
+  }
+  // 1080x1350 portrait card, text-forward so it exports everywhere; LeBron's face is the one
+  // image (from Jorge's nba-headshots GitHub Pages, CORS-safe) and it is skipped if it fails.
+  async function buildCard(d) {
+    const W = 1080, H = 1350, SS = 2, cv = document.createElement('canvas'); cv.width = W * SS; cv.height = H * SS;
+    const ctx = cv.getContext('2d'); ctx.scale(SS, SS);
+    try { await document.fonts.ready; } catch (e) {}
+    const COND = '"Barlow Condensed", Impact, sans-serif', MONO = '"JetBrains Mono", Menlo, monospace', SANS = '"DM Sans", Arial, sans-serif';
+    const bg = ctx.createLinearGradient(0, 0, W * .4, H); bg.addColorStop(0, '#1c1c28'); bg.addColorStop(.6, '#0d0d14'); bg.addColorStop(1, '#08080c');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    const glow = ctx.createRadialGradient(W * .8, -80, 40, W * .8, -80, 700); glow.addColorStop(0, 'rgba(242,183,5,.32)'); glow.addColorStop(1, 'rgba(242,183,5,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, 520);
+    const pglow = ctx.createRadialGradient(80, H, 40, 80, H, 600); pglow.addColorStop(0, 'rgba(85,37,131,.5)'); pglow.addColorStop(1, 'rgba(85,37,131,0)');
+    ctx.fillStyle = pglow; ctx.fillRect(0, H - 700, W, 700);
+    ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 2; rr(ctx, 28, 28, W - 56, H - 56, 30); ctx.stroke();
+    // header
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#f2b705'; ctx.font = '800 118px ' + COND; ctx.fillText('BEAT LEBRON', 72, 178);
+    ctx.fillStyle = '#c9c9d6'; ctx.font = '700 30px ' + COND; try { ctx.letterSpacing = '4px'; } catch (e) {}
+    ctx.fillText('TWO ALL-STARS VS. THE KING  ·  HOOPSMATIC', 74, 222); try { ctx.letterSpacing = '0px'; } catch (e) {}
+    // LeBron face (optional)
+    const face = await loadFace(LB.h);
+    if (face) { ctx.save(); ctx.beginPath(); ctx.arc(W - 150, 165, 82, 0, Math.PI * 2); ctx.closePath(); ctx.clip(); ctx.drawImage(face, W - 232, 83, 164, 164); ctx.restore(); ctx.strokeStyle = '#f2b705'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(W - 150, 165, 84, 0, Math.PI * 2); ctx.stroke(); }
+    // score block
+    ctx.fillStyle = 'rgba(255,255,255,.04)'; rr(ctx, 60, 270, W - 120, 250, 24); ctx.fill();
+    ctx.fillStyle = '#9d9db0'; ctx.font = '700 26px ' + COND; try { ctx.letterSpacing = '4px'; } catch (e) {}
+    ctx.fillText(d.name ? d.name.toUpperCase() + '  ·  FINAL SCORE' : 'FINAL SCORE', 96, 322); try { ctx.letterSpacing = '0px'; } catch (e) {}
+    ctx.fillStyle = '#fff'; ctx.font = '800 150px ' + COND; ctx.fillText(fmt(d.score), 92, 462);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#f2b705'; ctx.font = '800 64px ' + COND; ctx.fillText(d.correct + (d.correct === 1 ? ' DUO' : ' DUOS'), W - 96, 400);
+    ctx.fillStyle = '#c9c9d6'; ctx.font = '700 26px ' + MONO; ctx.fillText('streak ' + d.streak + '  ·  avg ' + d.avg + 's', W - 96, 452);
+    ctx.textAlign = 'left';
+    // duos found
+    ctx.fillStyle = '#9d9db0'; ctx.font = '700 26px ' + COND; try { ctx.letterSpacing = '4px'; } catch (e) {}
+    ctx.fillText(d.found.length ? 'DUOS THAT OUT-STAT LEBRON' : 'NO DUO FOUND THIS TIME', 74, 590); try { ctx.letterSpacing = '0px'; } catch (e) {}
+    let ty = 616; const rowH = 96, gap = 12, maxRows = 6;
+    const rows = d.found.slice(-maxRows).reverse();
+    rows.forEach(f => {
+      ctx.fillStyle = 'rgba(255,255,255,.035)'; rr(ctx, 60, ty, W - 120, rowH, 18); ctx.fill();
+      ctx.fillStyle = '#fff'; fitText(ctx, f.a + ' + ' + f.b, W - 330, '700', 40, COND, 26); ctx.fillText(f.a + ' + ' + f.b, 88, ty + 44);
+      ctx.fillStyle = '#b9b9c8'; ctx.font = '500 22px ' + SANS; ctx.fillText(ellip(ctx, fmt(f.sum) + ' ' + f.label + ' (LeBron ' + fmt(f.L) + ')', W - 330), 88, ty + 76);
+      ctx.textAlign = 'right'; ctx.fillStyle = '#4fd48a'; ctx.font = '800 40px ' + COND; ctx.fillText('+' + f.pts, W - 88, ty + 60); ctx.textAlign = 'left';
+      ty += rowH + gap;
+    });
+    if (d.found.length > maxRows) { ctx.fillStyle = '#9d9db0'; ctx.font = '500 22px ' + SANS; ctx.fillText('+ ' + (d.found.length - maxRows) + ' more', 88, ty + 20); }
+    // footer
+    ctx.textAlign = 'center'; ctx.fillStyle = '#c9c9d6'; ctx.font = '700 26px ' + COND; try { ctx.letterSpacing = '3px'; } catch (e) {}
+    ctx.fillText('PLAY AT ' + SHARE_BASE.replace(/^https?:\/\//, '').replace(/\/$/, '').toUpperCase(), W / 2, H - 70); try { ctx.letterSpacing = '0px'; } catch (e) {}
+    return cv;
+  }
+  function dataURLtoBlob(d) { const parts = d.split(','); const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/png'; const bin = atob(parts[1]); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: mime }); }
+  function downloadBlob(blob) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'beat-lebron-result.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500); }
+  function canShareFile(blob) { if (!navigator.canShare) return false; try { return navigator.canShare({ files: [new File([blob], 'x.png', { type: 'image/png' })] }); } catch (e) { return false; } }
+  const SOC = [['x', 'X'], ['bsky', 'Bluesky'], ['fb', 'Facebook'], ['wa', 'WhatsApp'], ['reddit', 'Reddit'], ['telegram', 'Telegram']];
+  const SOC_ICON = {
+    x: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.9 1.15h3.68l-8.04 9.19L24 22.85h-7.41l-5.8-7.58-6.64 7.58H.47l8.6-9.83L0 1.15h7.59l5.24 6.93zM17.61 20.64h2.04L6.49 3.24H4.3z"/></svg>',
+    bsky: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 10.8C10.91 8.69 7.95 4.75 5.2 2.81 2.57.94 1.56 1.27.9 1.57.14 1.91 0 3.08 0 3.77c0 .69.38 5.65.62 6.48.82 2.74 3.71 3.66 6.38 3.36-3.91.58-7.39 2.01-2.83 7.08 5.01 5.19 6.87-1.11 7.82-4.31.95 3.2 2.05 9.27 7.73 4.31 4.27-4.31 1.17-6.5-2.74-7.08 2.67.3 5.57-.63 6.38-3.36C23.62 9.42 24 4.46 24 3.77c0-.69-.14-1.86-.9-2.2-.66-.3-1.66-.62-4.3 1.24C16.05 4.75 13.09 8.69 12 10.8z"/></svg>',
+    fb: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8v8.44C19.61 23.08 24 18.09 24 12.07z"/></svg>',
+    wa: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15s-.77.97-.94 1.16c-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.14-.18.19-.3.29-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35M12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.83 9.83 0 0 1 2.89 6.99c0 5.45-4.43 9.88-9.88 9.88M20.46 3.49A11.81 11.81 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89a11.82 11.82 0 0 0-3.48-8.42"/></svg>',
+    reddit: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.74c.69 0 1.25.56 1.25 1.25a1.25 1.25 0 0 1-2.5.06l-2.6-.55-.8 3.75c1.83.07 3.48.63 4.68 1.49.31-.31.73-.49 1.21-.49.97 0 1.75.79 1.75 1.75 0 .72-.44 1.33-1.01 1.61.03.17.04.34.04.52 0 2.7-3.13 4.87-7 4.87-3.88 0-7-2.17-7-4.87 0-.18.01-.37.04-.53A1.75 1.75 0 0 1 4.03 12c0-.97.79-1.75 1.75-1.75.46 0 .9.2 1.21.49 1.21-.88 2.88-1.43 4.74-1.49l.89-4.18a.34.34 0 0 1 .14-.2.35.35 0 0 1 .24-.04l2.91.62a1.21 1.21 0 0 1 1.11-.7zM9.25 12c-.69 0-1.25.56-1.25 1.25 0 .69.56 1.25 1.25 1.25.69 0 1.25-.56 1.25-1.25 0-.69-.56-1.25-1.25-1.25zm5.5 0c-.69 0-1.25.56-1.25 1.25 0 .69.56 1.25 1.25 1.25.69 0 1.25-.56 1.25-1.25 0-.69-.56-1.25-1.25-1.25zm-5.47 3.99a.33.33 0 0 0-.23.09.33.33 0 0 0 0 .47c.84.84 2.48.91 2.96.91.48 0 2.11-.06 2.96-.91a.36.36 0 0 0 .03-.47.33.33 0 0 0-.46 0c-.55.53-1.69.73-2.51.73-.83 0-1.98-.2-2.51-.73a.33.33 0 0 0-.24-.09z"/></svg>',
+    telegram: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M11.94 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.06 0zm4.96 7.22c.1 0 .32.02.47.14a.51.51 0 0 1 .17.33c.02.09.04.31.02.47-.18 1.9-.96 6.5-1.36 8.63-.17.9-.5 1.2-.82 1.23-.7.06-1.23-.46-1.9-.9-1.06-.7-1.65-1.12-2.68-1.8-1.19-.78-.42-1.21.26-1.91.18-.18 3.25-2.98 3.31-3.23 0-.03.01-.15-.06-.21-.07-.06-.17-.04-.25-.02-.1.02-1.79 1.14-5.06 3.34-.48.33-.91.49-1.3.48-.43 0-1.25-.24-1.86-.44-.75-.24-1.35-.37-1.3-.79.03-.21.33-.43.89-.66 3.5-1.52 5.83-2.53 7-3.01 3.33-1.39 4.02-1.63 4.48-1.63z"/></svg>'
+  };
+  async function openShare() {
+    const d = { score: S.score, correct: S.correct, streak: S.bestStreak, avg: S.times.length ? (S.times.reduce((a, b) => a + b, 0) / S.times.length).toFixed(1) : '0.0', found: S.found, name: savedName().name };
+    let durl, blob;
+    try { const cv = await buildCard(d); durl = cv.toDataURL('image/png'); blob = dataURLtoBlob(durl); }
+    catch (e) { console.warn('share card failed', e); toast('Could not build the image'); return; }
+    const ex = $('shareModal'); if (ex) ex.remove();
+    const ov = document.createElement('div'); ov.id = 'shareModal'; ov.className = 'share-modal';
+    const canCopy = !!(navigator.clipboard && window.ClipboardItem), canShare = canShareFile(blob), link = shareURL();
+    ov.innerHTML = '<div class="share-box">' +
+      '<button class="share-x" aria-label="Close">×</button>' +
+      '<img class="share-img" alt="Your Beat LeBron result" src="' + durl + '">' +
+      '<div class="share-link"><input class="share-url" readonly value="' + esc(link) + '"><button class="share-copybtn" data-act="copylink">Copy</button></div>' +
+      '<div class="share-social">' + SOC.map(s => '<button class="soc" data-soc="' + s[0] + '" aria-label="Share on ' + s[1] + '">' + SOC_ICON[s[0]] + '<span>' + s[1] + '</span></button>').join('') + '</div>' +
+      '<div class="share-btns">' +
+        '<button class="btn" data-act="download">Download</button>' +
+        (canCopy ? '<button class="btn ghost" data-act="copy">Copy image</button>' : '') +
+        (canShare ? '<button class="btn ghost" data-act="share">More…</button>' : '') +
+        '<button class="btn ghost" data-act="again">Play again</button>' +
+      '</div><div class="share-msg"></div></div>';
+    document.body.appendChild(ov);
+    const msg = ov.querySelector('.share-msg');
+    const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = e => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', onKey);
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    ov.querySelector('.share-x').onclick = close;
+    ov.querySelectorAll('[data-soc]').forEach(b => { b.onclick = () => window.open(socialURL(b.dataset.soc), '_blank', 'noopener,noreferrer'); });
+    const urlField = ov.querySelector('.share-url'); urlField.onclick = () => urlField.select();
+    ov.querySelectorAll('[data-act]').forEach(b => {
+      b.onclick = async () => {
+        const act = b.dataset.act;
+        if (act === 'again') { close(); start(); return; }
+        if (act === 'download') { downloadBlob(blob); msg.textContent = 'Saved to your downloads.'; }
+        else if (act === 'copy') { try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); msg.textContent = 'Image copied. Paste it anywhere.'; } catch (e) { msg.textContent = 'Copy blocked here. Use Download.'; } }
+        else if (act === 'copylink') { try { await navigator.clipboard.writeText(shareText() + '\n' + link); msg.textContent = 'Text + link copied.'; } catch (e) { msg.textContent = 'Copy blocked here.'; } }
+        else if (act === 'share') { const file = new File([blob], 'beat-lebron-result.png', { type: 'image/png' }); try { await navigator.share({ files: [file], title: 'Beat LeBron', text: shareText(), url: link }); } catch (e) { if (!(e && e.name === 'AbortError')) msg.textContent = 'Share unavailable. Use the buttons above.'; } }
+      };
+    });
+  }
+
+  // ---------------- leaderboard (name-gated, like the Daily 73-9) ----------------
+  let lbBoard = null, lbTab = 'day';
+  const LBL = { day: 'Today', week: 'This week', alltime: 'All-time', streak: 'Longest streaks' };
+  async function api(path, body) {
+    const r = await fetch(CFG.lbApi + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' });
+    return r.json();
+  }
+  function lbRows() {
+    const list = (lbBoard && lbBoard[lbTab]) || [];
+    const me = savedName().name;
+    if (!list.length) return '<div class="empty">No named scores yet' + (lbTab === 'day' ? ' today' : '') + '. Add your name and be first.</div>';
+    return list.map((e, i) => '<div class="row' + (me && e.name === me ? ' me' : '') + '"><span class="rk mono">' + (i + 1) + '</span><span class="nm">' + esc(e.name) + (e.handle ? '<a href="https://x.com/' + encodeURIComponent(e.handle) + '" target="_blank" rel="noopener">@' + esc(e.handle) + '</a>' : '') + '</span><span class="sc mono">' + (lbTab === 'streak' ? e.streak + '<small>in a row</small>' : fmt(e.score) + '<small>' + e.correct + ' duos</small>') + '</span></div>').join('');
+  }
+  function lbRender(rank, gateMsg) {
+    const panel = $('lbPanel');
+    const nm = savedName();
+    let rankLine = '';
+    if (rank) {
+      const parts = [];
+      for (const w of ['day', 'week', 'alltime']) if (rank[w]) parts.push(LBL[w] + ': <b>#' + rank[w].rank + '</b> of ' + fmt(rank[w].of));
+      if (parts.length) rankLine = '<div class="rankline">Where this game ranks — ' + parts.join(' · ') + '</div>';
+    }
+    const gate = nm.name
+      ? '<div class="rankline">Playing as <b>' + esc(nm.name) + '</b>' + (nm.handle ? ' (@' + esc(nm.handle) + ')' : '') + ' · <a href="#" id="lbRename">change</a></div>'
+      : '<div class="gate"><input id="lbName" maxlength="24" placeholder="Your name (shown on the board)"><input id="lbHandle" maxlength="30" placeholder="@handle (optional)"><button class="btn sm" id="lbSave">Save name</button></div><div class="gatemsg" id="lbGateMsg">Scores without a name count toward rank but never appear on the board.</div>';
+    panel.innerHTML = '<div class="hdr">Leaderboard</div>' + rankLine + gate +
+      '<div class="tabs">' + ['day', 'week', 'alltime', 'streak'].map(k => '<button class="tab' + (k === lbTab ? ' on' : '') + '" data-tab="' + k + '">' + LBL[k] + '</button>').join('') + '</div>' +
+      '<div class="rows" id="lbRows">' + lbRows() + '</div>';
+    if (gateMsg) { const g = $('lbGateMsg'); if (g) { g.textContent = gateMsg; g.classList.add('err'); } }
+    panel.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { lbTab = b.dataset.tab; lbRender(rank); });
+    const save = $('lbSave');
+    if (save) {
+      const submit = async () => {
+        const name = $('lbName').value.trim(), handle = $('lbHandle').value.trim();
+        if (name.length < 2) { lbRender(rank, 'Type a name first (2-24 characters).'); return; }
+        save.disabled = true;
+        try {
+          const d = await api('/name', { id: deviceId(), name, handle });
+          if (d && d.ok) { saveName(name, handle.replace(/^@/, '')); if (d.board) lbBoard = d.board; lbRender(rank); toast('Saved'); }
+          else lbRender(rank, d && d.error === 'inappropriate' ? 'That name isn’t allowed. Try another.' : d && d.error === 'invalid characters' ? 'Letters and numbers only.' : 'Could not save' + (d && d.error ? ': ' + d.error : '.'));
+        } catch (e) { lbRender(rank, 'Network error. Try again.'); }
+      };
+      save.onclick = submit;
+      $('lbName').addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+    }
+    const ren = $('lbRename');
+    if (ren) ren.onclick = e => { e.preventDefault(); saveName('', ''); lbRender(rank); };
+  }
+  async function lbInit() {
+    const panel = $('lbPanel');
+    if (!CFG.lbApi) { panel.style.display = 'none'; return; }
+    panel.innerHTML = '<div class="hdr">Leaderboard</div><div class="empty">loading…</div>';
+    const nm = savedName();
+    try {
+      const d = await api('/claim', { id: deviceId(), name: nm.name, handle: nm.handle, score: S.score, correct: S.correct, questions: S.qn, streak: S.bestStreak, durationMs: Math.round(performance.now() - S.gameStart) });
+      if (d && d.ok) { lbBoard = d.board; S.lastClaim = d; lbRender(d.rank); return; }
+      // rejected (e.g. too fast) → still show the boards
+      const b = await api('/board?id=' + encodeURIComponent(deviceId()));
+      lbBoard = b; lbRender(null);
+    } catch (e) {
+      panel.innerHTML = '<div class="hdr">Leaderboard</div><div class="empty">Leaderboard unavailable right now.</div>';
+    }
+  }
+  // intro teaser: today's leader
+  (async function () {
+    if (!CFG.lbApi) return;
+    try {
+      const b = await api('/board');
+      if (b && b.day && b.day.length) $('todayBest').innerHTML = 'Today’s best: <b>' + fmt(b.day[0].score) + '</b> by ' + esc(b.day[0].name) + (b.alltime && b.alltime.length ? ' · All-time: <b>' + fmt(b.alltime[0].score) + '</b> by ' + esc(b.alltime[0].name) : '');
+    } catch (e) {}
+  })();
 
   // ---------------- wiring ----------------
   $('btnStart').addEventListener('click', start);
   $('btnAgain').addEventListener('click', start);
+  $('btnShare').addEventListener('click', openShare);
   $('btnNext').addEventListener('click', advance);
   document.addEventListener('keydown', e => {
     if (!screens.game.classList.contains('on')) return;
     if (S.locked && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); advance(); return; }
     if (!S.locked && /^[1-6]$/.test(e.key)) { const c = $('grid').children[+e.key - 1]; if (c) tap(+e.key - 1, c); }
   });
-  window.__beatLebronDebug = { generate, POOL, METRICS, LB };   // console hook for testing the generator
-  // pause-proof: if the tab is hidden mid-question, the clock keeps running (deliberate: no cheating by tabbing out)
+  window.__beatLebronDebug = { generate, buildCard, POOL, METRICS, LB, S };   // console hooks for testing
 })();
 </script>
 </body>
