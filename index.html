@@ -634,19 +634,19 @@
     const misses = d.missed.slice(-5);
     ctx.fillStyle = '#ff6b6b'; ctx.font = '700 36px ' + COND; ls('4px');
     ctx.fillText(misses.length ? 'WHERE LEBRON GOT ME' : 'NO MISSES', 66, 590); ls('0px');
-    let ty = 612; const rowH = 112, gap = 10;
+    let ty = 612; const rowH = 104, gap = 10;
     misses.forEach(m => {
       ctx.fillStyle = 'rgba(255,255,255,.07)'; rr(ctx, 56, ty, W - 112, rowH, 20); ctx.fill();
       ctx.fillStyle = '#ff6b6b'; rr(ctx, 56, ty, 10, rowH, 5); ctx.fill();
-      // the mistake is the headline; the stat and the actual answer follow
-      const mine = m.picked ? m.picked[0] + ' + ' + m.picked[1] + ' = ' + fmt(m.pickedSum) : 'Time ran out, no pick';
-      ctx.fillStyle = '#ffffff'; fitText(ctx, mine, W - 200, '700', 44, COND, 30); ctx.fillText(mine, 92, ty + 46);
-      ctx.fillStyle = '#f2b705'; ctx.font = '600 27px ' + COND; ls('1px');
-      const stat = m.label.toUpperCase() + '  ·  LEBRON ' + fmt(m.L);
-      ctx.fillText(ellip(ctx, stat, W - 200), 92, ty + 78); ls('0px');
+      // line 1: the mistake, with the stat it was measured in; line 2: LeBron's mark + the answer
+      const mine = m.picked ? m.picked[0] + ' + ' + m.picked[1] + ' = ' + fmt(m.pickedSum) + ' ' + m.label : 'Time ran out: ' + m.label;
+      ctx.fillStyle = '#ffffff'; fitText(ctx, mine, W - 200, '700', 46, COND, 28); ctx.fillText(mine, 92, ty + 50);
+      ctx.fillStyle = '#f2b705'; ctx.font = '700 28px ' + COND; ls('1px');
+      const lbl = 'LEBRON ' + fmt(m.L) + '   ';
+      ctx.fillText(lbl, 92, ty + 86);
+      const lw = ctx.measureText(lbl).width; ls('0px');
       ctx.fillStyle = '#c9c9d6'; ctx.font = '500 24px ' + MONO;
-      const answer = 'answer: ' + m.a + ' + ' + m.b + ' = ' + fmt(m.sum);
-      ctx.fillText(ellip(ctx, answer, W - 200), 92, ty + 104);
+      ctx.fillText(ellip(ctx, 'answer: ' + m.a + ' + ' + m.b + ' = ' + fmt(m.sum), W - 200 - lw), 92 + lw, ty + 86);
       ty += rowH + gap;
     });
 
