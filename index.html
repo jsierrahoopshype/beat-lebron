@@ -540,9 +540,17 @@
   }
 
   // ---------------- sharing (73-9 style: card preview, link, 6 platforms, download/copy/native) ----------------
+  // Share text leads with the loss, names the duo that ended the run, and keeps under X's limit.
   function shareText() {
-    const n = S.correct;
-    return 'I scored ' + fmt(S.score) + ' points in Beat LeBron, finding ' + n + ' All-Star duo' + (n === 1 ? '' : 's') + ' that out-stat LeBron James before running out of lives. Can you beat that?';
+    const n = S.correct, last = S.missed[S.missed.length - 1];
+    let t = '';
+    if (last) {
+      const mine = last.picked ? 'I went ' + last.picked[0] + ' + ' + last.picked[1] + ' (' + fmt(last.pickedSum) + ')' : 'I ran out of time';
+      t = mine + '. Should have been ' + last.a + ' + ' + last.b + ' (' + fmt(last.sum) + ' ' + last.label + ', LeBron has ' + fmt(last.L) + '). ';
+    }
+    t += 'LeBron 5, me ' + n + (n ? ', ' + fmt(S.score) + ' points' : '') + '. Beat that.';
+    if (t.length > 245) t = (last ? (last.picked ? 'I went ' + last.picked[0] + ' + ' + last.picked[1] + ', should have been ' + last.a + ' + ' + last.b + '. ' : '') : '') + 'LeBron 5, me ' + n + ', ' + fmt(S.score) + ' points. Beat that.';
+    return t;
   }
   function shareURL() {
     const nm = savedName().name;
@@ -602,8 +610,8 @@
     ctx.fillStyle = disc; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
     if (face) {
       ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
-      const z = 1.12, sz = R * 2 * z;   // slight zoom, biased upward so the head fills the disc
-      ctx.drawImage(face, cx - sz / 2, cy - sz / 2 - R * 0.06, sz, sz);
+      const z = 1.15, sz = R * 2 * z;   // zoom around the centre: head stays whole, the crop's hard bottom edge leaves the disc
+      ctx.drawImage(face, cx - sz / 2, cy - sz / 2, sz, sz);
       ctx.restore();
     } else {
       ctx.fillStyle = '#f2b705'; ctx.font = '800 96px ' + COND; ctx.textAlign = 'center'; ctx.fillText('LJ', cx, cy + 34); ctx.textAlign = 'left';
@@ -614,27 +622,31 @@
     ctx.fillStyle = 'rgba(255,255,255,.07)'; rr(ctx, 56, 296, W - 112, 232, 26); ctx.fill();
     ctx.fillStyle = '#c9c9d6'; ctx.font = '700 32px ' + COND; ls('4px');
     ctx.fillText(d.name ? d.name.toUpperCase() + '  ·  FINAL SCORE' : 'FINAL SCORE', 96, 350); ls('0px');
-    ctx.fillStyle = '#ffffff'; ctx.font = '800 164px ' + COND; ctx.fillText(fmt(d.score), 90, 502);
+    ctx.fillStyle = '#ffffff'; fitText(ctx, fmt(d.score), 430, '800', 164, COND, 100); ctx.fillText(fmt(d.score), 90, 502);
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#4fd48a'; ctx.font = '800 82px ' + COND; ctx.fillText(d.correct + ' RIGHT', W - 96, 420);
-    ctx.fillStyle = '#ffffff'; ctx.font = '700 30px ' + MONO; ctx.fillText('streak ' + d.streak + '  ·  avg ' + d.avg + 's', W - 96, 490);
+    const nm = d.missed.length;
+    ctx.fillStyle = '#ff5c5c'; fitText(ctx, nm + (nm === 1 ? ' MISS' : ' MISSES'), 440, '800', 96, COND, 60); ctx.fillText(nm + (nm === 1 ? ' MISS' : ' MISSES'), W - 96, 426);
+    const statLine = d.correct + ' right · streak ' + d.streak + ' · avg ' + d.avg + 's';
+    ctx.fillStyle = '#ffffff'; fitText(ctx, statLine, 440, '700', 30, MONO, 18); ctx.fillText(statLine, W - 96, 492);
     ctx.textAlign = 'left';
 
     // the misses
     const misses = d.missed.slice(-5);
     ctx.fillStyle = '#ff6b6b'; ctx.font = '700 36px ' + COND; ls('4px');
-    ctx.fillText(misses.length ? 'THE ' + ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'][misses.length] + ' YOU MISSED' : 'NO MISSES', 66, 590); ls('0px');
+    ctx.fillText(misses.length ? 'WHERE LEBRON GOT ME' : 'NO MISSES', 66, 590); ls('0px');
     let ty = 612; const rowH = 112, gap = 10;
     misses.forEach(m => {
       ctx.fillStyle = 'rgba(255,255,255,.07)'; rr(ctx, 56, ty, W - 112, rowH, 20); ctx.fill();
       ctx.fillStyle = '#ff6b6b'; rr(ctx, 56, ty, 10, rowH, 5); ctx.fill();
-      ctx.fillStyle = '#ffffff'; fitText(ctx, m.a + ' + ' + m.b, W - 200, '700', 44, COND, 30); ctx.fillText(m.a + ' + ' + m.b, 92, ty + 46);
+      // the mistake is the headline; the stat and the actual answer follow
+      const mine = m.picked ? m.picked[0] + ' + ' + m.picked[1] + ' = ' + fmt(m.pickedSum) : 'Time ran out, no pick';
+      ctx.fillStyle = '#ffffff'; fitText(ctx, mine, W - 200, '700', 44, COND, 30); ctx.fillText(mine, 92, ty + 46);
       ctx.fillStyle = '#f2b705'; ctx.font = '600 27px ' + COND; ls('1px');
-      const stat = fmt(m.sum) + ' ' + m.label.toUpperCase() + '  (LEBRON ' + fmt(m.L) + ')';
+      const stat = m.label.toUpperCase() + '  ·  LEBRON ' + fmt(m.L);
       ctx.fillText(ellip(ctx, stat, W - 200), 92, ty + 78); ls('0px');
       ctx.fillStyle = '#c9c9d6'; ctx.font = '500 24px ' + MONO;
-      const yours = m.picked ? 'you: ' + m.picked[0] + ' + ' + m.picked[1] + ' = ' + fmt(m.pickedSum) : 'time ran out';
-      ctx.fillText(ellip(ctx, yours, W - 200), 92, ty + 104);
+      const answer = 'answer: ' + m.a + ' + ' + m.b + ' = ' + fmt(m.sum);
+      ctx.fillText(ellip(ctx, answer, W - 200), 92, ty + 104);
       ty += rowH + gap;
     });
 
