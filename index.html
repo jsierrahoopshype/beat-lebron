@@ -154,8 +154,8 @@
   /* ---------- share modal (73-9 style) ---------- */
   .share-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(10,10,18,.82); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn .2s; overflow-y: auto; }
   @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-  .share-box { position: relative; width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: center; gap: 14px; margin: auto; }
-  .share-img { width: 100%; max-height: 50vh; object-fit: contain; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
+  .share-box { position: relative; width: 100%; max-width: 520px; display: flex; flex-direction: column; align-items: center; gap: 14px; margin: auto; }
+  .share-img { width: 100%; max-height: 64vh; object-fit: contain; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
   .share-x { position: absolute; top: -14px; right: -10px; width: 40px; height: 40px; border-radius: 50%; border: none; background: #fff; color: var(--ink); font-size: 24px; line-height: 1; box-shadow: 0 4px 14px rgba(0,0,0,.5); }
   .share-link { display: flex; width: 100%; gap: 8px; }
   .share-url { flex: 1; min-width: 0; background: #1c1c26; border: 1px solid #3a3a4a; border-radius: 10px; color: #dcdce8; font-family: "JetBrains Mono", monospace; font-size: 12px; padding: 10px 12px; }
@@ -280,8 +280,10 @@
   };
   // Share links point at hoopsmatic.com only when the game is actually served from there;
   // on GitHub Pages (or locally) they point at the page itself so nothing 404s.
-  const lbOverride = new URLSearchParams(location.search).get('lbapi'); if (lbOverride) CFG.lbApi = lbOverride;   // local testing only
-  const SHARE_BASE = /(^|\.)hoopsmatic\.com$/.test(location.hostname) ? CFG.canonicalUrl : (location.origin + location.pathname).replace(/index\.html$/, '');
+  const _qs = new URLSearchParams(location.search);
+  if (_qs.get('lbapi')) CFG.lbApi = _qs.get('lbapi');            // local testing only
+  if (_qs.get('hsbase')) CFG.headshotBase = _qs.get('hsbase');   // local testing only
+  const SHARE_BASE = CFG.canonicalUrl;   // share links and the card always point at hoopsmatic.com/beat-lebron
 
   const DATA = window.LEBRON_DUO_DATA;
   const METRICS = DATA.metrics;
@@ -377,7 +379,7 @@
   function saveName(name, handle) { lsSet(CFG.nameKey, JSON.stringify({ name, handle })); }
 
   // ---------------- state ----------------
-  const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], q: null, picks: [], locked: false, t0: 0, raf: 0, auto: 0, gameStart: 0, lastClaim: null };
+  const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], q: null, picks: [], locked: false, t0: 0, raf: 0, auto: 0, gameStart: 0, lastClaim: null };
   const screens = { intro: $('sIntro'), game: $('sGame'), over: $('sOver') };
   function show(name) { Object.keys(screens).forEach(k => screens[k].classList.toggle('on', k === name)); window.scrollTo(0, 0); }
 
@@ -416,7 +418,7 @@
 
   // ---------------- game flow ----------------
   function start() {
-    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], gameStart: performance.now(), lastClaim: null });
+    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], gameStart: performance.now(), lastClaim: null });
     recentP.length = 0; recentM.length = 0;
     clearTimeout(S.auto);
     show('game');
@@ -496,6 +498,8 @@
       v.classList.add('pop');
     } else {
       S.lives--; S.streak = 0;
+      const pk = (!timedOut && S.picks.length === 2) ? [q.players[S.picks[0]], q.players[S.picks[1]]] : null;
+      S.missed.push({ a: A.n, b: B.n, sum: q.sum, L: q.L, label: q.metric.label, picked: pk ? [pk[0].n, pk[1].n] : null, pickedSum: pk ? pk[0].v[mi] + pk[1].v[mi] : null });
       let yours = '';
       if (!timedOut && S.picks.length === 2) {
         const p1 = q.players[S.picks[0]], p2 = q.players[S.picks[1]];
@@ -568,52 +572,75 @@
       im.src = CFG.headshotBase + 'face2/' + file;
     });
   }
-  // 1080x1350 portrait card, text-forward so it exports everywhere; LeBron's face is the one
-  // image (from Jorge's nba-headshots GitHub Pages, CORS-safe) and it is skipped if it fails.
+  // 1080x1350 portrait card. High contrast, big type, always exactly the five misses
+  // (a game only ends after five misses) plus the count of duos found. LeBron's face comes
+  // from the nba-headshots GitHub Pages (CORS-safe) and is skipped if it fails to load.
   async function buildCard(d) {
     const W = 1080, H = 1350, SS = 2, cv = document.createElement('canvas'); cv.width = W * SS; cv.height = H * SS;
     const ctx = cv.getContext('2d'); ctx.scale(SS, SS);
     try { await document.fonts.ready; } catch (e) {}
-    const COND = '"Barlow Condensed", Impact, sans-serif', MONO = '"JetBrains Mono", Menlo, monospace', SANS = '"DM Sans", Arial, sans-serif';
-    const bg = ctx.createLinearGradient(0, 0, W * .4, H); bg.addColorStop(0, '#1c1c28'); bg.addColorStop(.6, '#0d0d14'); bg.addColorStop(1, '#08080c');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-    const glow = ctx.createRadialGradient(W * .8, -80, 40, W * .8, -80, 700); glow.addColorStop(0, 'rgba(242,183,5,.32)'); glow.addColorStop(1, 'rgba(242,183,5,0)');
-    ctx.fillStyle = glow; ctx.fillRect(0, 0, W, 520);
-    const pglow = ctx.createRadialGradient(80, H, 40, 80, H, 600); pglow.addColorStop(0, 'rgba(85,37,131,.5)'); pglow.addColorStop(1, 'rgba(85,37,131,0)');
-    ctx.fillStyle = pglow; ctx.fillRect(0, H - 700, W, 700);
-    ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 2; rr(ctx, 28, 28, W - 56, H - 56, 30); ctx.stroke();
+    const COND = '"Barlow Condensed", Impact, "Arial Narrow", sans-serif', MONO = '"JetBrains Mono", Menlo, monospace';
+    const ls = v => { try { ctx.letterSpacing = v; } catch (e) {} };
+    // background: near-black with a purple/gold wash, thin frame
+    ctx.fillStyle = '#0a0a0f'; ctx.fillRect(0, 0, W, H);
+    const g1 = ctx.createRadialGradient(W, 0, 60, W, 0, 760); g1.addColorStop(0, 'rgba(242,183,5,.30)'); g1.addColorStop(1, 'rgba(242,183,5,0)');
+    ctx.fillStyle = g1; ctx.fillRect(0, 0, W, H);
+    const g2 = ctx.createRadialGradient(0, H, 60, 0, H, 800); g2.addColorStop(0, 'rgba(85,37,131,.55)'); g2.addColorStop(1, 'rgba(85,37,131,0)');
+    ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(255,255,255,.10)'; ctx.lineWidth = 3; rr(ctx, 24, 24, W - 48, H - 48, 28); ctx.stroke();
+
     // header
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-    ctx.fillStyle = '#f2b705'; ctx.font = '800 118px ' + COND; ctx.fillText('BEAT LEBRON', 72, 178);
-    ctx.fillStyle = '#c9c9d6'; ctx.font = '700 30px ' + COND; try { ctx.letterSpacing = '4px'; } catch (e) {}
-    ctx.fillText('TWO ALL-STARS VS. THE KING  ·  HOOPSMATIC', 74, 222); try { ctx.letterSpacing = '0px'; } catch (e) {}
-    // LeBron face (optional)
+    ctx.fillStyle = '#f2b705'; ls('-1px'); fitText(ctx, 'BEAT LEBRON', W - 420, '800', 138, COND, 90); ctx.fillText('BEAT LEBRON', 64, 190); ls('0px');
+    ctx.fillStyle = '#ffffff'; ls('3px'); fitText(ctx, 'TWO ALL-STARS VS. THE KING', W - 420, '700', 40, COND, 26); ctx.fillText('TWO ALL-STARS VS. THE KING', 66, 246); ls('0px');
+
+    // LeBron medallion: gradient disc, face, thick gold ring with glow
+    const cx = W - 178, cy = 170, R = 112;
     const face = await loadFace(LB.h);
-    if (face) { ctx.save(); ctx.beginPath(); ctx.arc(W - 150, 165, 82, 0, Math.PI * 2); ctx.closePath(); ctx.clip(); ctx.drawImage(face, W - 232, 83, 164, 164); ctx.restore(); ctx.strokeStyle = '#f2b705'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(W - 150, 165, 84, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.save(); ctx.shadowColor = 'rgba(242,183,5,.55)'; ctx.shadowBlur = 40; ctx.fillStyle = '#f2b705'; ctx.beginPath(); ctx.arc(cx, cy, R + 10, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    const disc = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R); disc.addColorStop(0, '#6a2fa3'); disc.addColorStop(1, '#2a1246');
+    ctx.fillStyle = disc; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+    if (face) {
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
+      const z = 1.12, sz = R * 2 * z;   // slight zoom, biased upward so the head fills the disc
+      ctx.drawImage(face, cx - sz / 2, cy - sz / 2 - R * 0.06, sz, sz);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = '#f2b705'; ctx.font = '800 96px ' + COND; ctx.textAlign = 'center'; ctx.fillText('LJ', cx, cy + 34); ctx.textAlign = 'left';
+    }
+    ctx.strokeStyle = '#f2b705'; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, R + 4, 0, Math.PI * 2); ctx.stroke();
+
     // score block
-    ctx.fillStyle = 'rgba(255,255,255,.04)'; rr(ctx, 60, 270, W - 120, 250, 24); ctx.fill();
-    ctx.fillStyle = '#9d9db0'; ctx.font = '700 26px ' + COND; try { ctx.letterSpacing = '4px'; } catch (e) {}
-    ctx.fillText(d.name ? d.name.toUpperCase() + '  ·  FINAL SCORE' : 'FINAL SCORE', 96, 322); try { ctx.letterSpacing = '0px'; } catch (e) {}
-    ctx.fillStyle = '#fff'; ctx.font = '800 150px ' + COND; ctx.fillText(fmt(d.score), 92, 462);
-    ctx.textAlign = 'right'; ctx.fillStyle = '#f2b705'; ctx.font = '800 64px ' + COND; ctx.fillText(d.correct + (d.correct === 1 ? ' DUO' : ' DUOS'), W - 96, 400);
-    ctx.fillStyle = '#c9c9d6'; ctx.font = '700 26px ' + MONO; ctx.fillText('streak ' + d.streak + '  ·  avg ' + d.avg + 's', W - 96, 452);
+    ctx.fillStyle = 'rgba(255,255,255,.07)'; rr(ctx, 56, 296, W - 112, 232, 26); ctx.fill();
+    ctx.fillStyle = '#c9c9d6'; ctx.font = '700 32px ' + COND; ls('4px');
+    ctx.fillText(d.name ? d.name.toUpperCase() + '  ·  FINAL SCORE' : 'FINAL SCORE', 96, 350); ls('0px');
+    ctx.fillStyle = '#ffffff'; ctx.font = '800 164px ' + COND; ctx.fillText(fmt(d.score), 90, 502);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#4fd48a'; ctx.font = '800 82px ' + COND; ctx.fillText(d.correct + ' RIGHT', W - 96, 420);
+    ctx.fillStyle = '#ffffff'; ctx.font = '700 30px ' + MONO; ctx.fillText('streak ' + d.streak + '  ·  avg ' + d.avg + 's', W - 96, 490);
     ctx.textAlign = 'left';
-    // duos found
-    ctx.fillStyle = '#9d9db0'; ctx.font = '700 26px ' + COND; try { ctx.letterSpacing = '4px'; } catch (e) {}
-    ctx.fillText(d.found.length ? 'DUOS THAT OUT-STAT LEBRON' : 'NO DUO FOUND THIS TIME', 74, 590); try { ctx.letterSpacing = '0px'; } catch (e) {}
-    let ty = 616; const rowH = 96, gap = 12, maxRows = 6;
-    const rows = d.found.slice(-maxRows).reverse();
-    rows.forEach(f => {
-      ctx.fillStyle = 'rgba(255,255,255,.035)'; rr(ctx, 60, ty, W - 120, rowH, 18); ctx.fill();
-      ctx.fillStyle = '#fff'; fitText(ctx, f.a + ' + ' + f.b, W - 330, '700', 40, COND, 26); ctx.fillText(f.a + ' + ' + f.b, 88, ty + 44);
-      ctx.fillStyle = '#b9b9c8'; ctx.font = '500 22px ' + SANS; ctx.fillText(ellip(ctx, fmt(f.sum) + ' ' + f.label + ' (LeBron ' + fmt(f.L) + ')', W - 330), 88, ty + 76);
-      ctx.textAlign = 'right'; ctx.fillStyle = '#4fd48a'; ctx.font = '800 40px ' + COND; ctx.fillText('+' + f.pts, W - 88, ty + 60); ctx.textAlign = 'left';
+
+    // the misses
+    const misses = d.missed.slice(-5);
+    ctx.fillStyle = '#ff6b6b'; ctx.font = '700 36px ' + COND; ls('4px');
+    ctx.fillText(misses.length ? 'THE ' + ['', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'][misses.length] + ' YOU MISSED' : 'NO MISSES', 66, 590); ls('0px');
+    let ty = 612; const rowH = 112, gap = 10;
+    misses.forEach(m => {
+      ctx.fillStyle = 'rgba(255,255,255,.07)'; rr(ctx, 56, ty, W - 112, rowH, 20); ctx.fill();
+      ctx.fillStyle = '#ff6b6b'; rr(ctx, 56, ty, 10, rowH, 5); ctx.fill();
+      ctx.fillStyle = '#ffffff'; fitText(ctx, m.a + ' + ' + m.b, W - 200, '700', 44, COND, 30); ctx.fillText(m.a + ' + ' + m.b, 92, ty + 46);
+      ctx.fillStyle = '#f2b705'; ctx.font = '600 27px ' + COND; ls('1px');
+      const stat = fmt(m.sum) + ' ' + m.label.toUpperCase() + '  (LEBRON ' + fmt(m.L) + ')';
+      ctx.fillText(ellip(ctx, stat, W - 200), 92, ty + 78); ls('0px');
+      ctx.fillStyle = '#c9c9d6'; ctx.font = '500 24px ' + MONO;
+      const yours = m.picked ? 'you: ' + m.picked[0] + ' + ' + m.picked[1] + ' = ' + fmt(m.pickedSum) : 'time ran out';
+      ctx.fillText(ellip(ctx, yours, W - 200), 92, ty + 104);
       ty += rowH + gap;
     });
-    if (d.found.length > maxRows) { ctx.fillStyle = '#9d9db0'; ctx.font = '500 22px ' + SANS; ctx.fillText('+ ' + (d.found.length - maxRows) + ' more', 88, ty + 20); }
+
     // footer
-    ctx.textAlign = 'center'; ctx.fillStyle = '#c9c9d6'; ctx.font = '700 26px ' + COND; try { ctx.letterSpacing = '3px'; } catch (e) {}
-    ctx.fillText('PLAY AT ' + SHARE_BASE.replace(/^https?:\/\//, '').replace(/\/$/, '').toUpperCase(), W / 2, H - 70); try { ctx.letterSpacing = '0px'; } catch (e) {}
+    ctx.textAlign = 'center'; ctx.fillStyle = '#ffffff'; ctx.font = '700 34px ' + COND; ls('4px');
+    ctx.fillText('PLAY AT HOOPSMATIC.COM/BEAT-LEBRON', W / 2, H - 58); ls('0px');
     return cv;
   }
   function dataURLtoBlob(d) { const parts = d.split(','); const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/png'; const bin = atob(parts[1]); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: mime }); }
@@ -629,7 +656,7 @@
     telegram: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M11.94 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.06 0zm4.96 7.22c.1 0 .32.02.47.14a.51.51 0 0 1 .17.33c.02.09.04.31.02.47-.18 1.9-.96 6.5-1.36 8.63-.17.9-.5 1.2-.82 1.23-.7.06-1.23-.46-1.9-.9-1.06-.7-1.65-1.12-2.68-1.8-1.19-.78-.42-1.21.26-1.91.18-.18 3.25-2.98 3.31-3.23 0-.03.01-.15-.06-.21-.07-.06-.17-.04-.25-.02-.1.02-1.79 1.14-5.06 3.34-.48.33-.91.49-1.3.48-.43 0-1.25-.24-1.86-.44-.75-.24-1.35-.37-1.3-.79.03-.21.33-.43.89-.66 3.5-1.52 5.83-2.53 7-3.01 3.33-1.39 4.02-1.63 4.48-1.63z"/></svg>'
   };
   async function openShare() {
-    const d = { score: S.score, correct: S.correct, streak: S.bestStreak, avg: S.times.length ? (S.times.reduce((a, b) => a + b, 0) / S.times.length).toFixed(1) : '0.0', found: S.found, name: savedName().name };
+    const d = { score: S.score, correct: S.correct, streak: S.bestStreak, avg: S.times.length ? (S.times.reduce((a, b) => a + b, 0) / S.times.length).toFixed(1) : '0.0', found: S.found, missed: S.missed, name: savedName().name };
     let durl, blob;
     try { const cv = await buildCard(d); durl = cv.toDataURL('image/png'); blob = dataURLtoBlob(durl); }
     catch (e) { console.warn('share card failed', e); toast('Could not build the image'); return; }
