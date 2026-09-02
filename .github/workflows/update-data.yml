@@ -1,0 +1,27 @@
+# Rebuilds lebron-duo-data.js from the public nba-player-data JSON once a day
+# (and on demand from the Actions tab). Commits only when the data changed.
+name: Update quiz data
+on:
+  schedule:
+    - cron: "50 11 * * *"   # 11:50 UTC, after nba-player-data's own 11:35 update
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python build_lebron_duo_data.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add lebron-duo-data.js
+          git diff --cached --quiet && echo "no change" && exit 0
+          git commit -m "Update quiz data $(date -u +%F)"
+          git pull --rebase
+          git push

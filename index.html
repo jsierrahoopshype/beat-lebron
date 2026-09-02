@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Beat LeBron: pick the two All-Stars who out-stat the King | HoopsMatic</title>
+<meta name="description" content="Six All-Stars, five lives, 15 seconds. Pick the two players whose combined stats or accolades beat LeBron James alone. Only one duo works.">
+<meta property="og:title" content="Beat LeBron: two All-Stars vs. the King">
+<meta property="og:description" content="Six All-Stars, five lives, 15 seconds. Pick the two players whose combined career beats LeBron James alone. Only one duo works.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #111114;
+    --ink-2: #4b4b55;
+    --ink-3: #8a8a96;
+    --line: #e2e2e8;
+    --gold: #f2b705;
+    --gold-ink: #6b4f00;
+    --purple: #552583;
+    --green: #1f9d55;
+    --green-bg: #e6f6ec;
+    --red: #d63b3b;
+    --red-bg: #fbe9e9;
+    --sel: #111114;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(17,17,20,.06), 0 8px 24px rgba(17,17,20,.06);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: "DM Sans", system-ui, -apple-system, Segoe UI, sans-serif; font-size: 16px; line-height: 1.4; }
+  body { min-height: 100svh; display: flex; flex-direction: column; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .cond { font-family: "Barlow Condensed", "DM Sans", sans-serif; letter-spacing: .01em; }
+  button { font: inherit; cursor: pointer; }
+  .wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 40px; flex: 1; display: flex; flex-direction: column; }
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.on { display: flex; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 14px; }
+  .brand { font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); text-decoration: none; }
+  .brand b { color: var(--ink); }
+
+  /* ---------- intro ---------- */
+  .hero { background: var(--ink); color: #fff; border-radius: 22px; padding: 28px 24px 26px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .hero:before { content: ""; position: absolute; inset: -40% -20% auto auto; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(242,183,5,.35), transparent 65%); pointer-events: none; }
+  .hero h1 { margin: 0; font-size: clamp(44px, 9vw, 72px); line-height: .92; font-weight: 800; text-transform: uppercase; }
+  .hero h1 span { color: var(--gold); }
+  .hero p { margin: 14px 0 0; font-size: 17px; color: #d8d8e0; max-width: 520px; }
+  .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
+  .rule { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px 12px 10px; }
+  .rule b { display: block; font-size: 30px; line-height: 1; font-weight: 800; }
+  .rule span { display: block; font-size: 12px; color: #b9b9c6; margin-top: 4px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+  .cta { margin-top: 22px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .btn { border: 0; border-radius: 999px; padding: 14px 26px; font-weight: 700; font-size: 17px; background: var(--gold); color: var(--ink); transition: transform .08s ease, filter .15s ease; }
+  .btn:hover { filter: brightness(1.05); }
+  .btn:active { transform: scale(.97); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+  .hero .btn.ghost { color: #fff; border-color: rgba(255,255,255,.25); }
+  .best { font-size: 14px; color: #b9b9c6; }
+  .best b { color: #fff; }
+  .example { margin-top: 18px; background: var(--card); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); font-size: 15px; color: var(--ink-2); }
+  .example b { color: var(--ink); }
+
+  /* ---------- game HUD ---------- */
+  .hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+  .lives { display: flex; gap: 4px; }
+  .life { width: 18px; height: 18px; transition: transform .3s ease, opacity .3s ease; }
+  .life.lost { opacity: .18; transform: scale(.7); }
+  .score { text-align: right; font-weight: 700; font-size: 22px; }
+  .score small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .qnum { text-align: center; font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .timer { height: 8px; background: var(--line); border-radius: 99px; margin: 14px 0 0; overflow: hidden; position: relative; }
+  .timer i { display: block; height: 100%; width: 100%; background: var(--ink); border-radius: 99px; transform-origin: left; }
+  .timer.warn i { background: var(--red); }
+  .tleft { text-align: right; font-size: 13px; margin-top: 6px; color: var(--ink-2); font-weight: 700; }
+
+  .q { margin: 16px 0 12px; }
+  .q.hide { display: none; }
+  .q h2 { margin: 0; font-size: clamp(22px, 4.6vw, 30px); line-height: 1.15; font-weight: 700; letter-spacing: -.01em; }
+  .q h2 mark { background: linear-gradient(transparent 60%, rgba(242,183,5,.55) 60%); color: inherit; padding: 0 2px; }
+  .lb { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; background: var(--purple); color: #fff; border-radius: 999px; padding: 6px 14px 6px 6px; font-size: 14px; font-weight: 600; }
+  .lb img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #fff; }
+  .lb b { font-family: "JetBrains Mono", monospace; font-size: 15px; color: var(--gold); }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; } }
+  .card { position: relative; background: var(--card); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px 8px 10px; text-align: center; box-shadow: var(--shadow); transition: transform .1s ease, border-color .15s ease, background .15s ease; user-select: none; -webkit-user-select: none; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; color: var(--ink); }
+  .card:hover { transform: translateY(-2px); }
+  .card:disabled { cursor: default; transform: none; }
+  .card.sel { border-color: var(--sel); background: #fffbe8; }
+  .card .pick { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; display: none; align-items: center; justify-content: center; }
+  .card.sel .pick { display: flex; }
+  .face { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; background: #e9e9ef; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #6d6d7a; flex: none; }
+  .face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .name { margin-top: 7px; font-weight: 700; font-size: 14px; line-height: 1.15; }
+  .span { margin-top: 3px; font-size: 12px; color: var(--ink-3); }
+  .val { margin-top: 4px; font-weight: 700; font-size: 17px; display: none; }
+  .card.reveal .val { display: block; }
+  .card.win { border-color: var(--green); background: var(--green-bg); }
+  .card.win .val { color: var(--green); }
+  .card.miss { border-color: var(--red); background: var(--red-bg); }
+  .card.miss .val { color: var(--red); }
+  .card.dim { opacity: .55; }
+
+  .verdict { margin: 16px 0 12px; border-radius: var(--radius); padding: 14px 16px; background: var(--card); box-shadow: var(--shadow); display: none; }
+  .verdict.on { display: block; }
+  .verdict h3 { margin: 0; font-size: 22px; font-weight: 800; text-transform: uppercase; }
+  .verdict h3.ok { color: var(--green); }
+  .verdict h3.bad { color: var(--red); }
+  .verdict p { margin: 6px 0 0; font-size: 15px; color: var(--ink-2); }
+  .verdict p b { color: var(--ink); }
+  .verdict .pts { float: right; font-weight: 800; font-size: 22px; color: var(--green); }
+  .next { margin-top: 10px; display: flex; justify-content: flex-end; gap: 10px; align-items: center; }
+  .next .hint { font-size: 12px; color: var(--ink-3); }
+
+  /* ---------- game over ---------- */
+  .over { background: var(--card); border-radius: 22px; padding: 26px 22px; box-shadow: var(--shadow); text-align: center; }
+  .over h2 { margin: 0; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+  .over .big { font-size: clamp(64px, 16vw, 110px); line-height: 1; font-weight: 800; margin: 6px 0 0; }
+  .over .sub { color: var(--ink-2); margin-top: 4px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
+  .stat { background: var(--bg); border-radius: 12px; padding: 12px 8px 10px; }
+  .stat b { display: block; font-size: 26px; font-weight: 800; }
+  .stat span { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin-top: 2px; }
+  .newbest { display: inline-block; margin-top: 14px; background: var(--gold); color: var(--ink); font-weight: 800; padding: 6px 14px; border-radius: 999px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+  .share { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .share button, .share a { border: 1.5px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 10px 16px; font-weight: 600; font-size: 14px; text-decoration: none; }
+  .share button:hover, .share a:hover { border-color: var(--ink); }
+  .again { margin-top: 18px; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: all .25s ease; pointer-events: none; }
+  .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .foot { margin-top: 26px; font-size: 12px; color: var(--ink-3); text-align: center; }
+  .foot a { color: inherit; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+  .shake { animation: shake .35s ease; }
+  @keyframes pop { 0%{transform:scale(.96)} 60%{transform:scale(1.03)} 100%{transform:scale(1)} }
+  .pop { animation: pop .3s ease; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="brand" href="https://hoopsmatic.com/"><b>HoopsMatic</b> · Beat LeBron</a>
+    <span class="best mono" id="topBest"></span>
+  </div>
+
+  <!-- ================= INTRO ================= -->
+  <section class="screen on" id="sIntro">
+    <div class="hero">
+      <h1 class="cond">Two All-Stars<br>vs. <span>The King</span></h1>
+      <p>We show you six All-Stars. Pick the two whose combined stats or accolades beat LeBron James alone. Only one duo gets there. Every other pair falls short.</p>
+      <div class="rules">
+        <div class="rule"><b class="cond">5</b><span>Lives</span></div>
+        <div class="rule"><b class="cond">15s</b><span>Per question</span></div>
+        <div class="rule"><b class="cond">Speed</b><span>= points</span></div>
+      </div>
+      <div class="cta">
+        <button class="btn" id="btnStart">Play</button>
+        <span class="best" id="introBest"></span>
+      </div>
+    </div>
+    <div class="example">
+      <b>Example:</b> "Pick the two players who combine for more All-Star selections than LeBron James (22)." Michael Jordan (14) and Russell Westbrook (9) get you to 23. Jordan plus Blake Griffin (6) stalls at 20. Tap two names, the answer locks in on the second tap.
+    </div>
+    <div class="foot">Data: HoopsMatic All-Time Database, updated through the 2025-26 season. Career totals include the regular season and playoffs as labelled.</div>
+  </section>
+
+  <!-- ================= GAME ================= -->
+  <section class="screen" id="sGame">
+    <div class="hud">
+      <div class="lives" id="lives"></div>
+      <div class="qnum mono" id="qnum">Q1</div>
+      <div class="score"><small>Score</small><span class="mono" id="score">0</span></div>
+    </div>
+    <div class="timer" id="timer"><i id="timerBar"></i></div>
+    <div class="tleft mono" id="tleft">15.0s</div>
+
+    <div class="q" id="qBlock">
+      <h2 id="qText"></h2>
+      <div class="lb" id="lbChip"><img id="lbFace" alt="" onerror="this.style.display='none'"><span>LeBron James</span><b id="lbVal"></b></div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="next" id="nextRow" style="display:none">
+      <span class="hint" id="nextHint">Press Enter or Space</span>
+      <button class="btn" id="btnNext">Next</button>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <!-- ================= GAME OVER ================= -->
+  <section class="screen" id="sOver">
+    <div class="over">
+      <h2>Final score</h2>
+      <div class="big cond mono" id="finalScore">0</div>
+      <div class="sub" id="finalSub"></div>
+      <div id="newBest"></div>
+      <div class="stats">
+        <div class="stat"><b class="cond" id="stCorrect">0</b><span>Duos found</span></div>
+        <div class="stat"><b class="cond" id="stStreak">0</b><span>Best streak</span></div>
+        <div class="stat"><b class="cond" id="stAvg">0.0s</b><span>Avg answer</span></div>
+      </div>
+      <div class="share">
+        <button id="shCopy">Copy result</button>
+        <a id="shX" target="_blank" rel="noopener">Post on X</a>
+        <a id="shBsky" target="_blank" rel="noopener">Post on Bluesky</a>
+        <button id="shNative" style="display:none">Share…</button>
+      </div>
+      <div class="again"><button class="btn" id="btnAgain">Play again</button></div>
+    </div>
+    <div class="foot">Best score is saved on this device. <a href="https://hoopsmatic.com/">More NBA tools on HoopsMatic</a></div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="lebron-duo-data.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---------------- config ----------------
+  const CFG = {
+    lives: 5,
+    seconds: 15,
+    basePoints: 100,        // for a correct answer
+    speedPoints: 100,       // extra, scaled by time left
+    minAllStar: 2,          // only players with this many All-Star nods enter the pool (recognizability)
+    upMargin: 0.10,         // winning duo may beat LeBron by at most this share of his mark (min +1)
+    closeBand: 0.15,        // fillers are preferred within this share of LeBron's mark below the cut
+    recentPlayers: 24,      // avoid reusing a player within this many recent picks
+    recentMetrics: 6,       // avoid reusing a metric within this many questions
+    metricMinA: 4,          // metrics with fewer viable "big" players get weighted down
+    headshotBase: 'https://jsierrahoopshype.github.io/nba-headshots/players/headshots/',
+    shareUrl: 'https://hoopsmatic.com/beat-lebron',
+    storageKey: 'hm_beat_lebron_best'
+  };
+
+  const DATA = window.LEBRON_DUO_DATA;
+  const METRICS = DATA.metrics;
+  const LB = DATA.lebron;
+  // Player of the Week / Month can't be won by any pair (LeBron's mark is more than double
+  // anyone else's), so such metrics are simply never viable; the generator skips them.
+  const POOL = DATA.players.filter(p => p.v[metricIndex('asg')] >= CFG.minAllStar);
+
+  function metricIndex(k) { for (let i = 0; i < METRICS.length; i++) if (METRICS[i].k === k) return i; return -1; }
+
+  // ---------------- metric viability ----------------
+  // For each metric: how many players could be the "big" half of a winning duo.
+  const metricWeight = METRICS.map((m, mi) => {
+    const L = LB.v[mi];
+    if (L <= 0) return 0;
+    const bigs = POOL.filter(p => p.v[mi] < L && p.v[mi] * 2 > L).length;
+    return bigs === 0 ? 0 : Math.min(1, bigs / CFG.metricMinA);
+  });
+
+  // ---------------- helpers ----------------
+  const rnd = Math.random;
+  function pickWeighted(arr, wfn) {
+    let tot = 0; const w = arr.map(x => { const v = Math.max(0, wfn(x)); tot += v; return v; });
+    let r = rnd() * tot;
+    for (let i = 0; i < arr.length; i++) { r -= w[i]; if (r <= 0) return arr[i]; }
+    return arr[arr.length - 1];
+  }
+  const fame = p => Math.pow(p.f + 2, 2.5);   // steep: keeps 1950s one-time All-Stars rare
+  const fmt = n => n.toLocaleString('en-US');
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function initials(n) { return n.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase(); }
+
+  // ---------------- question generator ----------------
+  // Structure of every question: A (biggest value) + B beats LeBron narrowly; the four fillers all sit
+  // below (LeBron - A), which guarantees that no other pair among the six can reach LeBron's mark.
+  const recentP = [];
+  const recentM = [];
+  function markRecent(list, item, cap) { list.push(item); while (list.length > cap) list.shift(); }
+
+  function generate() {
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const mi = pickWeighted(METRICS.map((m, i) => i), i => recentM.includes(i) ? 0 : metricWeight[i]);
+      const q = buildFor(mi, attempt < 40);
+      if (q) { markRecent(recentM, mi, CFG.recentMetrics); q.players.forEach(p => markRecent(recentP, p.n, CFG.recentPlayers)); return q; }
+    }
+    recentP.length = 0; recentM.length = 0;   // very unlikely: relax everything and retry
+    return generate();
+  }
+
+  function buildFor(mi, respectRecent) {
+    const L = LB.v[mi];
+    if (L <= 0 || metricWeight[mi] === 0) return null;
+    const up = Math.max(1, Math.ceil(L * CFG.upMargin));
+    const fresh = p => !respectRecent || !recentP.includes(p.n);
+    const elig = POOL.filter(p => p.v[mi] < L);
+    const As = elig.filter(p => p.v[mi] * 2 > L && fresh(p));
+    if (!As.length) return null;
+    for (let t = 0; t < 30; t++) {
+      const A = pickWeighted(As, fame);
+      const a = A.v[mi];
+      const Bs = elig.filter(p => p !== A && fresh(p) && p.v[mi] > L - a && p.v[mi] <= a && a + p.v[mi] <= L + up);
+      if (!Bs.length) continue;
+      const B = pickWeighted(Bs, fame);
+      const cut = L - a;                                   // fillers must be strictly below this
+      const lo = Math.max(0, cut - Math.max(1, Math.ceil(L * CFG.closeBand)));
+      let Fs = elig.filter(p => p !== A && p !== B && fresh(p) && p.v[mi] < cut && p.v[mi] >= lo);
+      if (Fs.length < 4) Fs = elig.filter(p => p !== A && p !== B && fresh(p) && p.v[mi] < cut);
+      if (Fs.length < 4) continue;
+      const fill = [];
+      // two "near miss" fillers first (top half of the allowed band), then two from the whole band
+      const near = Fs.filter(p => p.v[mi] >= Math.ceil((cut - 1) / 2));
+      const takeFrom = (arr) => { const p = pickWeighted(arr, x => fame(x) * (0.3 + (x.v[mi] + 1) / (cut + 1))); fill.push(p); Fs = Fs.filter(x => x !== p); return p; };
+      let nearPool = near.slice();
+      for (let i = 0; i < 2 && nearPool.length; i++) { const p = takeFrom(nearPool); nearPool = nearPool.filter(x => x !== p); }
+      while (fill.length < 4 && Fs.length) takeFrom(Fs);
+      if (fill.length < 4) continue;
+      const players = shuffle([A, B].concat(fill));
+      // hard verification: exactly one pair beats L, nothing ties
+      let beats = 0, tie = 0;
+      for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
+        const s = players[i].v[mi] + players[j].v[mi];
+        if (s > L) beats++; else if (s === L) tie++;
+      }
+      if (beats !== 1 || tie) continue;
+      return { mi, metric: METRICS[mi], L, players, win: [A, B], sum: a + B.v[mi] };
+    }
+    return null;
+  }
+
+  // ---------------- state ----------------
+  const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], q: null, picks: [], locked: false, t0: 0, raf: 0, timeout: 0, over: false };
+  const $ = id => document.getElementById(id);
+  const screens = { intro: $('sIntro'), game: $('sGame'), over: $('sOver') };
+  function show(name) { Object.keys(screens).forEach(k => screens[k].classList.toggle('on', k === name)); window.scrollTo(0, 0); }
+
+  let best = 0;
+  try { best = parseInt(localStorage.getItem(CFG.storageKey) || '0', 10) || 0; } catch (e) {}
+  function paintBest() {
+    $('topBest').textContent = best ? 'Best ' + fmt(best) : '';
+    $('introBest').innerHTML = best ? 'Your best: <b>' + fmt(best) + '</b>' : 'No score yet on this device';
+  }
+  paintBest();
+
+  // ---------------- HUD ----------------
+  const HEART = '<svg class="life" viewBox="0 0 24 24" fill="#d63b3b"><path d="M12 21s-7.5-4.6-9.8-9.1C.6 8.6 2.4 4.5 6.3 4.1c2.1-.2 3.9.9 5.7 3 1.8-2.1 3.6-3.2 5.7-3 3.9.4 5.7 4.5 4.1 7.8C19.5 16.4 12 21 12 21z"/></svg>';
+  function paintHud() {
+    $('lives').innerHTML = Array.from({ length: CFG.lives }, (_, i) => HEART).join('');
+    Array.from($('lives').children).forEach((el, i) => el.classList.toggle('lost', i >= S.lives));
+    $('score').textContent = fmt(S.score);
+    $('qnum').textContent = 'Q' + S.qn;
+  }
+
+  // ---------------- headshots ----------------
+  function faceHtml(p) {
+    if (!p.h) return '<div class="face">' + esc(initials(p.n)) + '</div>';
+    const f2 = CFG.headshotBase + 'face2/' + p.h, f1 = CFG.headshotBase + 'face/' + p.h;
+    return '<div class="face"><img alt="" loading="eager" src="' + f2 + '" data-alt="' + f1 + '" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt=\'\';}else{this.parentNode.textContent=\'' + esc(initials(p.n)) + '\';}"></div>';
+  }
+  if (LB.h) $('lbFace').src = CFG.headshotBase + 'face2/' + LB.h; else $('lbFace').style.display = 'none';
+
+  // ---------------- game flow ----------------
+  function start() {
+    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], over: false });
+    recentP.length = 0; recentM.length = 0;
+    show('game');
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    S.q = generate();
+    S.qn++; S.picks = []; S.locked = false;
+    paintHud();
+    const m = S.q.metric;
+    $('qText').innerHTML = 'Pick the two players who combine for more <mark>' + esc(m.label) + '</mark> than LeBron James';
+    $('lbVal').textContent = fmt(S.q.L);
+    $('verdict').className = 'verdict'; $('verdict').innerHTML = '';
+    $('qBlock').classList.remove('hide');
+    $('nextRow').style.display = 'none';
+    const g = $('grid'); g.innerHTML = '';
+    S.q.players.forEach((p, i) => {
+      const b = document.createElement('button');
+      b.className = 'card'; b.dataset.i = i;
+      b.innerHTML = '<span class="pick"></span>' + faceHtml(p) + '<div class="name">' + esc(p.n) + '</div><div class="span mono">' + p.y[0] + '-' + String(p.y[1]).slice(2) + '</div><div class="val mono">' + fmt(p.v[S.q.mi]) + '</div>';
+      b.addEventListener('click', () => tap(i, b));
+      g.appendChild(b);
+    });
+    startTimer();
+  }
+
+  function tap(i, el) {
+    if (S.locked) return;
+    const k = S.picks.indexOf(i);
+    if (k >= 0) { S.picks.splice(k, 1); el.classList.remove('sel'); renumber(); return; }
+    S.picks.push(i); el.classList.add('sel'); renumber();
+    if (S.picks.length === 2) resolve(false);
+  }
+  function renumber() { Array.from($('grid').children).forEach(c => { const k = S.picks.indexOf(+c.dataset.i); c.querySelector('.pick').textContent = k >= 0 ? k + 1 : ''; }); }
+
+  function startTimer() {
+    S.t0 = performance.now();
+    const bar = $('timerBar'), tl = $('tleft'), tw = $('timer');
+    tw.classList.remove('warn');
+    cancelAnimationFrame(S.raf);
+    const tick = () => {
+      const left = Math.max(0, CFG.seconds - (performance.now() - S.t0) / 1000);
+      bar.style.transform = 'scaleX(' + (left / CFG.seconds) + ')';
+      tl.textContent = left.toFixed(1) + 's';
+      if (left <= 5) tw.classList.add('warn');
+      if (left <= 0) { resolve(true); return; }
+      S.raf = requestAnimationFrame(tick);
+    };
+    S.raf = requestAnimationFrame(tick);
+  }
+
+  function resolve(timedOut) {
+    if (S.locked) return;
+    S.locked = true;
+    cancelAnimationFrame(S.raf);
+    const elapsed = Math.min(CFG.seconds, (performance.now() - S.t0) / 1000);
+    const q = S.q, mi = q.mi;
+    const winIdx = q.players.map((p, i) => q.win.includes(p) ? i : -1).filter(i => i >= 0);
+    const right = !timedOut && S.picks.length === 2 && winIdx.every(i => S.picks.includes(i));
+    const cards = Array.from($('grid').children);
+    cards.forEach((c, i) => {
+      c.disabled = true; c.classList.add('reveal'); c.classList.remove('sel');
+      if (winIdx.includes(i)) c.classList.add('win');
+      else if (S.picks.includes(i)) c.classList.add('miss');
+      else c.classList.add('dim');
+    });
+    const v = $('verdict'); v.classList.add('on');
+    $('qBlock').classList.add('hide');
+    const A = q.win[0], B = q.win[1];
+    const winLine = '<b>' + esc(A.n) + '</b> (' + fmt(A.v[mi]) + ') + <b>' + esc(B.n) + '</b> (' + fmt(B.v[mi]) + ') = <b>' + fmt(q.sum) + '</b> vs. LeBron\'s ' + fmt(q.L) + '.';
+    // closest non-winning pair (always the big player plus the best filler)
+    let miss = null;
+    for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
+      const s = q.players[i].v[mi] + q.players[j].v[mi];
+      if (s <= q.L && (!miss || s > miss.s)) { const hi = q.players[i].v[mi] >= q.players[j].v[mi]; miss = { s, a: hi ? q.players[i] : q.players[j], b: hi ? q.players[j] : q.players[i] }; }
+    }
+    const missLine = miss ? ' Closest miss: ' + esc(miss.a.n) + ' + ' + esc(miss.b.n) + ' = ' + fmt(miss.s) + '.' : '';
+    let pts = 0;
+    if (right) {
+      pts = CFG.basePoints + Math.round(CFG.speedPoints * (1 - elapsed / CFG.seconds));
+      S.score += pts; S.correct++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); S.times.push(elapsed);
+      v.innerHTML = '<span class="pts mono">+' + pts + '</span><h3 class="ok cond">Correct</h3><p>' + winLine + ' Answered in ' + elapsed.toFixed(1) + 's.' + missLine + '</p>';
+      v.classList.add('pop');
+    } else {
+      S.lives--; S.streak = 0;
+      let yours = '';
+      if (!timedOut && S.picks.length === 2) {
+        const p1 = q.players[S.picks[0]], p2 = q.players[S.picks[1]];
+        yours = ' Your pick: ' + esc(p1.n) + ' + ' + esc(p2.n) + ' = <b>' + fmt(p1.v[mi] + p2.v[mi]) + '</b>, short by ' + fmt(q.L - p1.v[mi] - p2.v[mi]) + '.';
+      }
+      v.innerHTML = '<h3 class="bad cond">' + (timedOut ? 'Time\'s up' : 'Not that duo') + '</h3><p>' + winLine + yours + (yours ? '' : missLine) + '</p>';
+      $('sGame').classList.add('shake'); setTimeout(() => $('sGame').classList.remove('shake'), 400);
+    }
+    paintHud();
+    $('nextRow').style.display = 'flex';
+    $('btnNext').textContent = S.lives > 0 ? 'Next' : 'See final score';
+    $('btnNext').focus({ preventScroll: true });
+  }
+
+  function advance() {
+    if (!S.locked) return;
+    if (S.lives > 0) nextQuestion(); else gameOver();
+  }
+
+  function gameOver() {
+    S.over = true;
+    const isBest = S.score > best;
+    if (isBest) { best = S.score; try { localStorage.setItem(CFG.storageKey, String(best)); } catch (e) {} paintBest(); }
+    $('finalScore').textContent = fmt(S.score);
+    $('finalSub').textContent = S.correct === 1 ? '1 duo found before your lives ran out' : S.correct + ' duos found before your lives ran out';
+    $('newBest').innerHTML = isBest && S.score > 0 ? '<span class="newbest">New best on this device</span>' : '';
+    $('stCorrect').textContent = S.correct;
+    $('stStreak').textContent = S.bestStreak;
+    $('stAvg').textContent = S.times.length ? (S.times.reduce((a, b) => a + b, 0) / S.times.length).toFixed(1) + 's' : '–';
+    const text = 'I scored ' + fmt(S.score) + ' points in Beat LeBron, finding ' + S.correct + ' All-Star duo' + (S.correct === 1 ? '' : 's') + ' that out-stat LeBron James before running out of lives. Can you beat that?';
+    $('shX').href = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(CFG.shareUrl);
+    $('shBsky').href = 'https://bsky.app/intent/compose?text=' + encodeURIComponent(text + ' ' + CFG.shareUrl);
+    $('shCopy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(text + ' ' + CFG.shareUrl).then(() => toast('Copied')); };
+    if (navigator.share) { $('shNative').style.display = ''; $('shNative').onclick = () => navigator.share({ text, url: CFG.shareUrl }).catch(() => {}); }
+    show('over');
+  }
+
+  function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1600); }
+
+  // ---------------- wiring ----------------
+  $('btnStart').addEventListener('click', start);
+  $('btnAgain').addEventListener('click', start);
+  $('btnNext').addEventListener('click', advance);
+  document.addEventListener('keydown', e => {
+    if (!screens.game.classList.contains('on')) return;
+    if (S.locked && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); advance(); return; }
+    if (!S.locked && /^[1-6]$/.test(e.key)) { const c = $('grid').children[+e.key - 1]; if (c) tap(+e.key - 1, c); }
+  });
+  window.__beatLebronDebug = { generate, POOL, METRICS, LB };   // console hook for testing the generator
+  // pause-proof: if the tab is hidden mid-question, the clock keeps running (deliberate: no cheating by tabbing out)
+})();
+</script>
+</body>
+</html>
