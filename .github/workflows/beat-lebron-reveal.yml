@@ -1,0 +1,28 @@
+# Lives in the beat-lebron repo at .github/workflows/beat-lebron-reveal.yml; the script is bot/post_hardest.py.
+# Secrets needed in this repo (Settings > Secrets and variables > Actions):
+#   BSKY_HANDLE, BSKY_APP_PASSWORD, and optionally X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET.
+# DRY_RUN is "1" until you change it below: the run prints the post and sends nothing.
+name: Beat LeBron reveal post
+on:
+  schedule:
+    - cron: "5 13 * * *"    # 13:05 UTC = 9:05 AM EDT (10:05 AM in winter; adjust to "5 14 * * *" after the November clock change if you want it fixed at 9:05 ET)
+  workflow_dispatch:
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r bot/requirements.txt
+      - run: python bot/post_hardest.py
+        env:
+          DRY_RUN: "1"
+          MIN_PLAYS: "25"
+          BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
+          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}

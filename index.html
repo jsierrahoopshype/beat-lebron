@@ -278,6 +278,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="lebron-duo-data.js"></script>
+<script src="beat-lebron-gen.js"></script>
 <script>
 (function () {
   'use strict';
@@ -289,13 +290,6 @@
     revealSeconds: 5,       // auto-advance after the reveal
     basePoints: 100,        // for a correct answer
     speedPoints: 100,       // extra, scaled by time left
-    minAllStar: 2,          // only players with this many All-Star nods enter the pool
-    fameExp: 4,             // steeper = more Jordan/Kobe/Curry, fewer one-time All-Stars
-    upMargin: 0.10,         // winning duo may beat LeBron by at most this share of his mark (min +1)
-    closeBand: 0.15,        // fillers are preferred within this share of LeBron's mark below the cut
-    recentPlayers: 12,
-    recentMetrics: 6,
-    metricMinA: 4,
     headshotBase: 'https://jsierrahoopshype.github.io/nba-headshots/players/headshots/',
     canonicalUrl: 'https://hoopsmatic.com/beat-lebron',   // used for share links once the hoopsmatic.com route exists
     lbApi: 'https://beat-lebron-leaderboard.thejorgesierra.workers.dev',   // leaderboard Worker; '' disables
@@ -316,34 +310,11 @@
   const DATA = window.LEBRON_DUO_DATA;
   const METRICS = DATA.metrics;
   const LB = DATA.lebron;
-  const POOL = DATA.players.filter(p => p.v[metricIndex('asg')] >= CFG.minAllStar);
   function metricIndex(k) { for (let i = 0; i < METRICS.length; i++) if (METRICS[i].k === k) return i; return -1; }
 
-  // For each metric: how many players could be the "big" half of a winning duo (0 = metric unplayable,
-  // e.g. Player of the Week, where LeBron's mark is more than double anyone else's).
-  const metricWeight = METRICS.map((m, mi) => {
-    const L = LB.v[mi];
-    if (L <= 0) return 0;
-    const bigs = POOL.filter(p => p.v[mi] < L && p.v[mi] * 2 > L).length;
-    return bigs === 0 ? 0 : Math.min(1, bigs / CFG.metricMinA);
-  });
-
   // ---------------- helpers ----------------
-  // Seeded RNG so a shared link (?s=<seed>) replays the exact same question sequence for a friend.
-  let seed = '', rng = Math.random;
-  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-  function hashSeed(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
-  function setSeed(sd) { seed = sd; rng = mulberry32(hashSeed(sd + '|' + DATA.generated)); }
-  const rnd = () => rng();
-  function pickWeighted(arr, wfn) {
-    let tot = 0; const w = arr.map(x => { const v = Math.max(0, wfn(x)); tot += v; return v; });
-    let r = rnd() * tot;
-    for (let i = 0; i < arr.length; i++) { r -= w[i]; if (r <= 0) return arr[i]; }
-    return arr[arr.length - 1];
-  }
-  const fame = p => Math.pow(p.f + 2, CFG.fameExp);
+  const hashSeed = BeatLebronGen.hashSeed;
   const fmt = n => Number(n).toLocaleString('en-US');
-  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
   function initials(n) { return n.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase(); }
   const $ = id => document.getElementById(id);
@@ -351,56 +322,13 @@
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
-  // ---------------- question generator ----------------
-  // Every question: A (biggest value) + B beats LeBron narrowly; the four fillers all sit below
-  // (LeBron - A), which guarantees no other pair among the six can reach LeBron's mark.
-  const recentP = [], recentM = [];
-  function markRecent(list, item, cap) { list.push(item); while (list.length > cap) list.shift(); }
-  function generate() {
-    for (let attempt = 0; attempt < 60; attempt++) {
-      const mi = pickWeighted(METRICS.map((m, i) => i), i => recentM.includes(i) ? 0 : metricWeight[i]);
-      const q = buildFor(mi, attempt < 40);
-      if (q) { markRecent(recentM, mi, CFG.recentMetrics); q.players.forEach(p => markRecent(recentP, p.n, CFG.recentPlayers)); return q; }
-    }
-    recentP.length = 0; recentM.length = 0;
-    return generate();
-  }
-  function buildFor(mi, respectRecent) {
-    const L = LB.v[mi];
-    if (L <= 0 || metricWeight[mi] === 0) return null;
-    const up = Math.max(1, Math.ceil(L * CFG.upMargin));
-    const fresh = p => !respectRecent || !recentP.includes(p.n);
-    const elig = POOL.filter(p => p.v[mi] < L);
-    const As = elig.filter(p => p.v[mi] * 2 > L && fresh(p));
-    if (!As.length) return null;
-    for (let t = 0; t < 30; t++) {
-      const A = pickWeighted(As, fame);
-      const a = A.v[mi];
-      const Bs = elig.filter(p => p !== A && fresh(p) && p.v[mi] > L - a && p.v[mi] <= a && a + p.v[mi] <= L + up);
-      if (!Bs.length) continue;
-      const B = pickWeighted(Bs, fame);
-      const cut = L - a;
-      const lo = Math.max(0, cut - Math.max(1, Math.ceil(L * CFG.closeBand)));
-      let Fs = elig.filter(p => p !== A && p !== B && fresh(p) && p.v[mi] < cut && p.v[mi] >= lo);
-      if (Fs.length < 4) Fs = elig.filter(p => p !== A && p !== B && fresh(p) && p.v[mi] < cut);
-      if (Fs.length < 4) continue;
-      const fill = [];
-      const takeFrom = (arr) => { const p = pickWeighted(arr, x => fame(x) * (0.3 + (x.v[mi] + 1) / (cut + 1))); fill.push(p); Fs = Fs.filter(x => x !== p); return p; };
-      let nearPool = Fs.filter(p => p.v[mi] >= Math.ceil((cut - 1) / 2));
-      for (let i = 0; i < 2 && nearPool.length; i++) { const p = takeFrom(nearPool); nearPool = nearPool.filter(x => x !== p); }
-      while (fill.length < 4 && Fs.length) takeFrom(Fs);
-      if (fill.length < 4) continue;
-      const players = shuffle([A, B].concat(fill));
-      let beats = 0, tie = 0;
-      for (let i = 0; i < 6; i++) for (let j = i + 1; j < 6; j++) {
-        const s = players[i].v[mi] + players[j].v[mi];
-        if (s > L) beats++; else if (s === L) tie++;
-      }
-      if (beats !== 1 || tie) continue;
-      return { mi, metric: METRICS[mi], L, players, win: [A, B], sum: a + B.v[mi] };
-    }
-    return null;
-  }
+  // ---------------- question generator (shared module, seeded) ----------------
+  // The Worker replays the same seed with the same module to verify a game, so the question
+  // sequence depends only on (data version, seed): see beat-lebron-gen.js.
+  let seed = '', GEN = null;
+  function setSeed(sd) { seed = String(sd); GEN = BeatLebronGen.create(DATA, seed); }
+  function generate() { return GEN.generate(); }
+  const POOL = BeatLebronGen.create(DATA, 'pool').POOL;
 
   // ---------------- identity (device id + saved name, like the 73-9 game) ----------------
   function deviceId() {
@@ -506,14 +434,27 @@
   if (LB.h) $('lbFace').src = CFG.headshotBase + 'face/' + LB.h; else $('lbFace').style.display = 'none';
 
   // ---------------- game flow ----------------
-  function start() {
-    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], gameStart: performance.now(), lastClaim: null });
-    recentP.length = 0; recentM.length = 0;
+  let starting = false;
+  async function start() {
+    if (starting) return;
+    starting = true;
+    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], picksLog: [], token: '', gameStart: performance.now(), lastClaim: null });
     clearTimeout(S.auto);
     S.next = null;
     S.h2h = (CH && CH.seed && !S.usedChallenge) ? CH : null;
     if (S.h2h) S.usedChallenge = true;
-    setSeed(S.h2h ? S.h2h.seed : Math.random().toString(36).slice(2, 10));
+    // Ask the Worker for a signed seed so the game can be verified at the end. If the Worker is
+    // unreachable the game still plays on a local seed, it just goes on the board as unverified.
+    let sd = S.h2h ? S.h2h.seed : Math.random().toString(36).slice(2, 10);
+    if (CFG.lbApi) {
+      try {
+        const r = await Promise.race([api('/start', { id: deviceId(), seed: S.h2h ? S.h2h.seed : undefined }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2500))]);
+        if (r && r.ok && r.seed) { sd = r.seed; S.token = r.token; }
+      } catch (e) { /* unverified game */ }
+    }
+    setSeed(sd);
+    S.gameStart = performance.now();
+    starting = false;
     show('game');
     nextQuestion();
   }
@@ -589,6 +530,7 @@
       S.score += pts; S.correct++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); S.times.push(elapsed);
       S.found.push({ a: A.n, b: B.n, sum: q.sum, L: q.L, label: q.metric.label, pts });
       S.log.push({ m: q.metric.k, a: A.n, b: B.n, ok: true });
+      S.picksLog.push([S.picks[0], S.picks[1]]);
       v.innerHTML = '<span class="pts mono">+' + pts + '</span><h3 class="ok cond">Correct</h3><p>' + winLine + ' Answered in ' + elapsed.toFixed(1) + 's.' + missLine + '</p>';
       v.classList.add('pop');
     } else {
@@ -596,6 +538,7 @@
       const pk = (!timedOut && S.picks.length === 2) ? [q.players[S.picks[0]], q.players[S.picks[1]]] : null;
       S.missed.push({ a: A.n, b: B.n, sum: q.sum, L: q.L, label: q.metric.label, picked: pk ? [pk[0].n, pk[1].n] : null, pickedSum: pk ? pk[0].v[mi] + pk[1].v[mi] : null });
       S.log.push({ m: q.metric.k, a: A.n, b: B.n, ok: false, p: pk ? pk[0].n + ' + ' + pk[1].n : 'timeout' });
+      S.picksLog.push(pk ? [S.picks[0], S.picks[1]] : null);
       let yours = '';
       if (!timedOut && S.picks.length === 2) {
         const p1 = q.players[S.picks[0]], p2 = q.players[S.picks[1]];
@@ -834,7 +777,7 @@
       const parts = [];
       const RL = { day: 'Today', week: 'This week', alltime: 'All-time' };
       for (const w of ['day', 'week', 'alltime']) if (rank[w]) parts.push(RL[w] + ': <b>#' + rank[w].rank + '</b> of ' + fmt(rank[w].of));
-      if (parts.length) rankLine = '<div class="rankline">Where this game ranks — ' + parts.join(' · ') + '</div>';
+      if (parts.length) rankLine = '<div class="rankline">Where this game ranks — ' + parts.join(' · ') + (S.lastClaim && S.lastClaim.verified ? ' · <span title="Replayed and checked by the server">verified</span>' : '') + (S.lastClaim && S.lastClaim.placed === false ? ' · not placed on the board (unverified high score)' : '') + '</div>';
     }
     const gate = nm.name
       ? '<div class="rankline">Playing as <b>' + esc(nm.name) + '</b>' + (nm.handle ? ' (@' + esc(nm.handle) + ')' : '') + ' · <a href="#" id="lbRename">change</a></div>'
@@ -868,7 +811,7 @@
     panel.innerHTML = '<div class="hdr">Leaderboard</div><div class="empty">loading…</div>';
     const nm = savedName();
     try {
-      const d = await api('/claim', { id: deviceId(), name: nm.name, handle: nm.handle, score: S.score, correct: S.correct, questions: S.qn, streak: S.bestStreak, durationMs: Math.round(performance.now() - S.gameStart), qs: S.log.slice(0, 400) });
+      const d = await api('/claim', { id: deviceId(), name: nm.name, handle: nm.handle, score: S.score, correct: S.correct, questions: S.qn, streak: S.bestStreak, durationMs: Math.round(performance.now() - S.gameStart), qs: S.log.slice(0, 400), seed, token: S.token || undefined, picks: S.token ? S.picksLog : undefined, dv: DATA.generated, gv: BeatLebronGen.GEN_VERSION });
       if (d && d.ok) { lbBoard = d.board; S.lastClaim = d; if (d.dayStreak) { const l = localStreak(); if (d.dayStreak.cur > l.cur) { l.cur = d.dayStreak.cur; l.best = Math.max(l.best, d.dayStreak.best); lsSet(CFG.streakKey, JSON.stringify(l)); } paintStreak(d.dayStreak); } lbRender(d.rank); return; }
       // rejected (e.g. too fast) → still show the boards
       const b = await api('/board?id=' + encodeURIComponent(deviceId()));
