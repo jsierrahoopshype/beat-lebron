@@ -55,6 +55,26 @@
   .best b { color: #fff; }
   .example { margin-top: 18px; background: var(--card); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); font-size: 15px; color: var(--ink-2); }
   .example b { color: var(--ink); }
+  .streakline { margin-top: 14px; display: none; align-items: center; gap: 10px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 10px 14px; font-size: 15px; color: #d8d8e0; }
+  .streakline.on { display: flex; }
+  .streakline b { color: var(--gold); font-size: 22px; }
+  .tier { display: inline-block; margin-top: 10px; border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
+  .tier.t4 { background: var(--gold); border-color: var(--gold); }
+  .h2h { margin-top: 14px; background: var(--bg); border-radius: 12px; padding: 12px 14px; font-size: 15px; }
+  .h2h b { font-size: 18px; }
+  .h2h .win { color: var(--green); font-weight: 800; }
+  .h2h .lose { color: var(--red); font-weight: 800; }
+  .mystats { margin-top: 16px; background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); text-align: left; }
+  .mystats .hdr { font-weight: 800; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+  .mystats .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  @media (max-width: 480px) { .mystats .grid4 { grid-template-columns: repeat(2, 1fr); } }
+  .mystats .cell { background: var(--bg); border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .mystats .cell b { display: block; font-size: 22px; font-weight: 800; }
+  .mystats .cell span { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; margin-top: 2px; }
+  .mystats p { margin: 10px 0 0; font-size: 14px; color: var(--ink-2); }
+  .mystats p b { color: var(--ink); }
+  .remind { margin-top: 10px; font-size: 13px; color: var(--ink-3); text-align: center; }
+  .remind a { color: var(--ink-2); }
   .todaybest { margin-top: 12px; font-size: 14px; color: var(--ink-2); text-align: center; min-height: 18px; }
   .todaybest b { color: var(--ink); }
 
@@ -190,6 +210,7 @@
       <h1 class="cond">Two All-Stars<br>vs. <span>The King</span></h1>
       <p>We show you six All-Stars. Pick the two whose combined stats or accolades beat LeBron James alone. Only one duo gets there. Every other pair falls short.</p>
       <div class="challenge" id="challenge"></div>
+      <div class="streakline" id="streakLine"></div>
       <div class="rules">
         <div class="rule"><b class="cond">5</b><span>Lives</span></div>
         <div class="rule"><b class="cond">15s</b><span>Per question</span></div>
@@ -235,7 +256,9 @@
       <h2>Final score</h2>
       <div class="big cond mono" id="finalScore">0</div>
       <div class="sub" id="finalSub"></div>
+      <div id="tierBadge"></div>
       <div id="newBest"></div>
+      <div id="h2h"></div>
       <div class="stats">
         <div class="stat"><b class="cond" id="stCorrect">0</b><span>Duos found</span></div>
         <div class="stat"><b class="cond" id="stStreak">0</b><span>Best streak</span></div>
@@ -247,6 +270,8 @@
       </div>
     </div>
     <div class="lbp" id="lbPanel"></div>
+    <div class="mystats" id="myStats"></div>
+    <div class="remind" id="remind"></div>
     <div class="foot"><a href="https://hoopsmatic.com/">More NBA tools on HoopsMatic</a></div>
   </section>
 </div>
@@ -276,7 +301,10 @@
     lbApi: 'https://beat-lebron-leaderboard.thejorgesierra.workers.dev',   // leaderboard Worker; '' disables
     storageKey: 'hm_beat_lebron_best',
     nameKey: 'hm_beat_lebron_name',
-    idKey: 'hm_beat_lebron_id'
+    idKey: 'hm_beat_lebron_id',
+    statsKey: 'hm_beat_lebron_stats',
+    streakKey: 'hm_beat_lebron_streak',
+    tiers: [[20, 'GOAT'], [13, 'MVP'], [8, 'All-Star'], [4, 'Starter'], [0, 'Role Player']]   // by duos found in a game
   };
   // Share links point at hoopsmatic.com only when the game is actually served from there;
   // on GitHub Pages (or locally) they point at the page itself so nothing 404s.
@@ -301,7 +329,12 @@
   });
 
   // ---------------- helpers ----------------
-  const rnd = Math.random;
+  // Seeded RNG so a shared link (?s=<seed>) replays the exact same question sequence for a friend.
+  let seed = '', rng = Math.random;
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function hashSeed(str) { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function setSeed(sd) { seed = sd; rng = mulberry32(hashSeed(sd + '|' + DATA.generated)); }
+  const rnd = () => rng();
   function pickWeighted(arr, wfn) {
     let tot = 0; const w = arr.map(x => { const v = Math.max(0, wfn(x)); tot += v; return v; });
     let r = rnd() * tot;
@@ -379,7 +412,7 @@
   function saveName(name, handle) { lsSet(CFG.nameKey, JSON.stringify({ name, handle })); }
 
   // ---------------- state ----------------
-  const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], q: null, picks: [], locked: false, t0: 0, raf: 0, auto: 0, gameStart: 0, lastClaim: null };
+  const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], q: null, next: null, picks: [], locked: false, t0: 0, raf: 0, auto: 0, gameStart: 0, lastClaim: null };
   const screens = { intro: $('sIntro'), game: $('sGame'), over: $('sOver') };
   function show(name) { Object.keys(screens).forEach(k => screens[k].classList.toggle('on', k === name)); window.scrollTo(0, 0); }
 
@@ -390,16 +423,66 @@
   }
   paintBest();
 
-  // challenge landing: ?c=<score>&n=<name> from a shared link
-  (function () {
+  // challenge landing: ?s=<seed>&c=<score>&n=<name> from a shared link -> same questions, head-to-head
+  const CH = (function () {
     const p = new URLSearchParams(location.search);
-    const c = parseInt(p.get('c') || '', 10);
-    if (c > 0) {
-      const n = (p.get('n') || '').slice(0, 24);
-      $('challenge').innerHTML = (n ? esc(n) : 'Someone') + ' scored <b>' + fmt(c) + '</b> and sent you this. Beat it.';
-      $('challenge').classList.add('on');
-    }
+    const c = parseInt(p.get('c') || '', 10), sd = (p.get('s') || '').replace(/[^a-z0-9]/gi, '').slice(0, 12);
+    if (!(c > 0)) return null;
+    const n = (p.get('n') || '').slice(0, 24) || 'A friend';
+    $('challenge').innerHTML = esc(n) + ' scored <b>' + fmt(c) + '</b>' + (sd ? ' on this exact set of questions. Same questions, your turn.' : ' and sent you this. Beat it.');
+    $('challenge').classList.add('on');
+    return { name: n, score: c, seed: sd };
   })();
+  function tierFor(n) { for (const [min, name] of CFG.tiers) if (n >= min) return name; return CFG.tiers[CFG.tiers.length - 1][1]; }
+  function tierIdx(n) { return CFG.tiers.length - 1 - CFG.tiers.findIndex(t => n >= t[0]); }
+
+  // ---------------- local stats + day streak (this device) ----------------
+  function myStats() { try { return JSON.parse(lsGet(CFG.statsKey) || 'null') || { games: 0, best: 0, duos: 0, qs: 0, m: {} }; } catch (e) { return { games: 0, best: 0, duos: 0, qs: 0, m: {} }; } }
+  function recordStats() {
+    const st = myStats();
+    st.games++; st.best = Math.max(st.best, S.score); st.duos += S.correct; st.qs += S.qn;
+    S.log.forEach(o => { const r = st.m[o.m] || (st.m[o.m] = { n: 0, miss: 0 }); r.n++; if (!o.ok) r.miss++; });
+    lsSet(CFG.statsKey, JSON.stringify(st));
+    return st;
+  }
+  function etDay(ts) { const p = {}; for (const x of new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(ts))) p[x.type] = x.value; return p.year + '-' + p.month + '-' + p.day; }
+  function localStreak() { try { return JSON.parse(lsGet(CFG.streakKey) || 'null') || { cur: 0, best: 0, last: '' }; } catch (e) { return { cur: 0, best: 0, last: '' }; } }
+  function bumpLocalStreak() {
+    const st = localStreak(), today = etDay(Date.now()), yday = etDay(Date.now() - 86400000);
+    if (st.last !== today) { st.cur = st.last === yday ? st.cur + 1 : 1; st.best = Math.max(st.best, st.cur); st.last = today; lsSet(CFG.streakKey, JSON.stringify(st)); }
+    return st;
+  }
+  function paintStreak(fromServer) {
+    const st = fromServer || (function () { const l = localStreak(), today = etDay(Date.now()), yday = etDay(Date.now() - 86400000); return { cur: (l.last === today || l.last === yday) ? l.cur : 0, best: l.best, playedToday: l.last === today }; })();
+    const el = $('streakLine');
+    if (!st.cur && !st.best) { el.classList.remove('on'); return; }
+    el.innerHTML = st.cur
+      ? '<b>' + st.cur + '</b><span>day streak' + (st.playedToday ? '. Come back tomorrow to make it ' + (st.cur + 1) + '.' : '. Play today to keep it alive.') + (st.best > st.cur ? ' Best: ' + st.best + '.' : '') + '</span>'
+      : '<b>0</b><span>day streak. Your best was ' + st.best + ' days. Start a new one.</span>';
+    el.classList.add('on');
+  }
+  paintStreak();
+  function renderMyStats() {
+    const st = myStats(); const box = $('myStats');
+    if (!st.games) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    let nemesis = null, strong = null;
+    for (const [k, r] of Object.entries(st.m)) {
+      if (r.n < 3) continue;
+      const rate = r.miss / r.n;
+      if (!nemesis || rate > nemesis.rate) nemesis = { k, rate, n: r.n };
+      if (!strong || rate < strong.rate) strong = { k, rate, n: r.n };
+    }
+    const label = k => { const i = metricIndex(k); return i >= 0 ? METRICS[i].label : k; };
+    box.innerHTML = '<div class="hdr">My stats on this device</div>' +
+      '<div class="grid4"><div class="cell"><b>' + fmt(st.games) + '</b><span>Games</span></div><div class="cell"><b>' + fmt(st.best) + '</b><span>Best score</span></div><div class="cell"><b>' + (st.games ? (st.duos / st.games).toFixed(1) : '0') + '</b><span>Duos per game</span></div><div class="cell"><b>' + (st.qs ? Math.round(100 * st.duos / st.qs) : 0) + '%</b><span>Accuracy</span></div></div>' +
+      (nemesis ? '<p>Nemesis stat: <b>' + esc(label(nemesis.k)) + '</b>, missed ' + Math.round(100 * nemesis.rate) + '% of ' + nemesis.n + '.' + (strong && strong.k !== nemesis.k ? ' Strongest: <b>' + esc(label(strong.k)) + '</b>, ' + Math.round(100 * (1 - strong.rate)) + '% right.' : '') + '</p>' : '<p>Play a few more games to see your nemesis stat.</p>');
+  }
+  // "Remind me": recurring 9:00 AM ET calendar event, same pattern as the Daily 73-9
+  function icsHref() {
+    const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//HoopsMatic//Beat LeBron//EN', 'BEGIN:VTIMEZONE', 'TZID:America/New_York', 'BEGIN:DAYLIGHT', 'TZOFFSETFROM:-0500', 'TZOFFSETTO:-0400', 'TZNAME:EDT', 'DTSTART:19700308T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'END:DAYLIGHT', 'BEGIN:STANDARD', 'TZOFFSETFROM:-0400', 'TZOFFSETTO:-0500', 'TZNAME:EST', 'DTSTART:19701101T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'END:STANDARD', 'END:VTIMEZONE', 'BEGIN:VEVENT', 'UID:beat-lebron-daily@hoopsmatic.com', 'DTSTAMP:20260901T000000Z', 'DTSTART;TZID=America/New_York:20260901T090000', 'DURATION:PT15M', 'RRULE:FREQ=DAILY', 'SUMMARY:Beat LeBron: keep your streak alive', 'DESCRIPTION:Two All-Stars vs. the King. ' + CFG.canonicalUrl, 'URL:' + CFG.canonicalUrl, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+    return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+  }
 
   // ---------------- HUD ----------------
   const HEART = '<svg class="life" viewBox="0 0 24 24" fill="#d63b3b"><path d="M12 21s-7.5-4.6-9.8-9.1C.6 8.6 2.4 4.5 6.3 4.1c2.1-.2 3.9.9 5.7 3 1.8-2.1 3.6-3.2 5.7-3 3.9.4 5.7 4.5 4.1 7.8C19.5 16.4 12 21 12 21z"/></svg>';
@@ -409,24 +492,32 @@
     $('score').textContent = fmt(S.score);
     $('qnum').textContent = 'Q' + S.qn;
   }
+  const faceUrl = p => CFG.headshotBase + 'face/' + p.h;
+  const preloaded = new Set();
+  function preload(q) { if (!q) return; q.players.forEach(p => { if (p.h && !preloaded.has(p.h)) { preloaded.add(p.h); const im = new Image(); im.src = faceUrl(p); } }); }
   function faceHtml(p) {
     if (!p.h) return '<div class="face">' + esc(initials(p.n)) + '</div>';
-    const f2 = CFG.headshotBase + 'face2/' + p.h, f1 = CFG.headshotBase + 'face/' + p.h;
-    return '<div class="face"><img alt="" src="' + f2 + '" data-alt="' + f1 + '" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt=\'\';}else{this.parentNode.textContent=\'' + esc(initials(p.n)) + '\';}"></div>';
+    // face/ (256px, ~35KB) for the cards; face2/ is 520px and ~300KB, far too heavy for six per question
+    return '<div class="face"><img alt="" decoding="async" src="' + faceUrl(p) + '" onerror="this.parentNode.textContent=\'' + esc(initials(p.n)) + '\'"></div>';
   }
-  if (LB.h) $('lbFace').src = CFG.headshotBase + 'face2/' + LB.h; else $('lbFace').style.display = 'none';
+  if (LB.h) $('lbFace').src = CFG.headshotBase + 'face/' + LB.h; else $('lbFace').style.display = 'none';
 
   // ---------------- game flow ----------------
   function start() {
-    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], gameStart: performance.now(), lastClaim: null });
+    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], gameStart: performance.now(), lastClaim: null });
     recentP.length = 0; recentM.length = 0;
     clearTimeout(S.auto);
+    S.next = null;
+    S.h2h = (CH && CH.seed && !S.usedChallenge) ? CH : null;
+    if (S.h2h) S.usedChallenge = true;
+    setSeed(S.h2h ? S.h2h.seed : Math.random().toString(36).slice(2, 10));
     show('game');
     nextQuestion();
   }
   function nextQuestion() {
     clearTimeout(S.auto);
-    S.q = generate();
+    S.q = S.next || generate();
+    S.next = generate(); preload(S.next);   // next question's faces download while this one plays
     S.qn++; S.picks = []; S.locked = false;
     paintHud();
     $('qText').innerHTML = 'Pick the two players who combine for more <mark>' + esc(S.q.metric.label) + '</mark> than LeBron James';
@@ -494,12 +585,14 @@
       pts = CFG.basePoints + Math.round(CFG.speedPoints * (1 - elapsed / CFG.seconds));
       S.score += pts; S.correct++; S.streak++; S.bestStreak = Math.max(S.bestStreak, S.streak); S.times.push(elapsed);
       S.found.push({ a: A.n, b: B.n, sum: q.sum, L: q.L, label: q.metric.label, pts });
+      S.log.push({ m: q.metric.k, a: A.n, b: B.n, ok: true });
       v.innerHTML = '<span class="pts mono">+' + pts + '</span><h3 class="ok cond">Correct</h3><p>' + winLine + ' Answered in ' + elapsed.toFixed(1) + 's.' + missLine + '</p>';
       v.classList.add('pop');
     } else {
       S.lives--; S.streak = 0;
       const pk = (!timedOut && S.picks.length === 2) ? [q.players[S.picks[0]], q.players[S.picks[1]]] : null;
       S.missed.push({ a: A.n, b: B.n, sum: q.sum, L: q.L, label: q.metric.label, picked: pk ? [pk[0].n, pk[1].n] : null, pickedSum: pk ? pk[0].v[mi] + pk[1].v[mi] : null });
+      S.log.push({ m: q.metric.k, a: A.n, b: B.n, ok: false, p: pk ? pk[0].n + ' + ' + pk[1].n : 'timeout' });
       let yours = '';
       if (!timedOut && S.picks.length === 2) {
         const p1 = q.players[S.picks[0]], p2 = q.players[S.picks[1]];
@@ -535,26 +628,43 @@
     $('stCorrect').textContent = S.correct;
     $('stStreak').textContent = S.bestStreak;
     $('stAvg').textContent = S.times.length ? (S.times.reduce((a, b) => a + b, 0) / S.times.length).toFixed(1) + 's' : '–';
+    const tier = tierFor(S.correct);
+    $('tierBadge').innerHTML = '<span class="tier t' + tierIdx(S.correct) + '">' + esc(tier) + ' tier</span>';
+    if (S.h2h) {
+      const me = S.score, them = S.h2h.score;
+      $('h2h').innerHTML = '<div class="h2h">Head-to-head on the same questions: <b>You ' + fmt(me) + '</b> · <b>' + esc(S.h2h.name) + ' ' + fmt(them) + '</b>. ' + (me > them ? '<span class="win">You win.</span>' : me < them ? '<span class="lose">They win.</span>' : 'Dead heat.') + '</div>';
+    } else $('h2h').innerHTML = '';
+    recordStats(); renderMyStats();
+    const lst = bumpLocalStreak(); paintStreak({ cur: lst.cur, best: lst.best, playedToday: true });
+    $('remind').innerHTML = 'Day streak: <b>' + lst.cur + '</b>' + (lst.best > lst.cur ? ' (best ' + lst.best + ')' : '') + ' · <a href="' + icsHref() + '" download="beat-lebron-reminder.ics">add a daily 9:00 AM ET reminder</a> to keep it alive';
     show('over');
     lbInit();
   }
 
   // ---------------- sharing (73-9 style: card preview, link, 6 platforms, download/copy/native) ----------------
-  // Share text leads with the loss, names the duo that ended the run, and keeps under X's limit.
+  // Share copy: a rotating set in Jorge's register. {n} questions survived, the stat and duo that
+  // ended the run, the score to chase, the tier. One variant is picked per game (stable for the game).
+  const SHARE_LINES = [
+    'I lasted {n} questions in the Beat LeBron game. Couldn\'t top him in {stat} with {A} and {B}. Try to pass my score ({score} points). {tier} tier.',
+    '{n} questions in the Beat LeBron game before I fell. Missed {A} and {B} on {stat}. My score is {score}. See if you can get past it.',
+    'Made it through {n} questions of Beat LeBron. Got stuck on {stat}: the answer was {A} and {B}. Score to chase: {score}.',
+    'Beat LeBron game: {n} questions, {score} points, {tier} tier. The one that ended it was {stat}, and it was {A} and {B}. Your turn.',
+    'Survived {n} questions in Beat LeBron. Didn\'t see {A} and {B} coming on {stat}. {score} points, can you do more?',
+    '{score} points in the Beat LeBron game. Went out on question {n} when {A} and {B} turned out to have more {stat} than LeBron. Give it a shot.',
+    'Played Beat LeBron. {n} questions, then {stat} got me: {A} and {B} was the pair. Try to outscore {score}.',
+    'Got {n} questions deep in Beat LeBron and lost on {stat}. Needed {A} and {B}. Score to pass: {score}. {tier} tier.'
+  ];
+  const SHARE_TIMEOUT = 'I lasted {n} questions in the Beat LeBron game. Ran out of time on {stat}: it was {A} and {B}. Try to pass my score ({score} points).';
+  const SHARE_ZERO = 'Beat LeBron game, out on the first question. {A} and {B} have more {stat} than him, apparently. Try it.';
   function shareText() {
-    const n = S.correct, last = S.missed[S.missed.length - 1];
-    let t = '';
-    if (last) {
-      const mine = last.picked ? 'I went ' + last.picked[0] + ' + ' + last.picked[1] + ' (' + fmt(last.pickedSum) + ')' : 'I ran out of time';
-      t = mine + '. Should have been ' + last.a + ' + ' + last.b + ' (' + fmt(last.sum) + ' ' + last.label + ', LeBron has ' + fmt(last.L) + '). ';
-    }
-    t += 'LeBron 5, me ' + n + (n ? ', ' + fmt(S.score) + ' points' : '') + '. Beat that.';
-    if (t.length > 245) t = (last ? (last.picked ? 'I went ' + last.picked[0] + ' + ' + last.picked[1] + ', should have been ' + last.a + ' + ' + last.b + '. ' : '') : '') + 'LeBron 5, me ' + n + ', ' + fmt(S.score) + ' points. Beat that.';
-    return t;
+    const last = S.missed[S.missed.length - 1] || {};
+    let tpl = S.correct === 0 ? SHARE_ZERO : (last.picked ? SHARE_LINES[hashSeed(seed) % SHARE_LINES.length] : SHARE_TIMEOUT);
+    const map = { n: S.qn, stat: last.label || 'a LeBron stat', A: last.a || '', B: last.b || '', score: fmt(S.score), tier: tierFor(S.correct) };
+    return tpl.replace(/\{(\w+)\}/g, (m, k) => map[k]);
   }
   function shareURL() {
     const nm = savedName().name;
-    return SHARE_BASE + '?c=' + S.score + (nm ? '&n=' + encodeURIComponent(nm) : '');
+    return SHARE_BASE + '?s=' + encodeURIComponent(seed) + '&c=' + S.score + (nm ? '&n=' + encodeURIComponent(nm) : '');
   }
   function socialURL(kind) {
     const url = shareURL(), text = shareText();
@@ -621,7 +731,7 @@
     // score block
     ctx.fillStyle = 'rgba(255,255,255,.07)'; rr(ctx, 56, 296, W - 112, 232, 26); ctx.fill();
     ctx.fillStyle = '#c9c9d6'; ctx.font = '700 32px ' + COND; ls('4px');
-    ctx.fillText(d.name ? d.name.toUpperCase() + '  ·  FINAL SCORE' : 'FINAL SCORE', 96, 350); ls('0px');
+    ctx.fillText((d.name ? d.name.toUpperCase() + '  ·  ' : '') + 'FINAL SCORE  ·  ' + tierFor(d.correct).toUpperCase() + ' TIER', 96, 350); ls('0px');
     ctx.fillStyle = '#ffffff'; fitText(ctx, fmt(d.score), 430, '800', 164, COND, 100); ctx.fillText(fmt(d.score), 90, 502);
     ctx.textAlign = 'right';
     const nm = d.missed.length;
@@ -708,8 +818,8 @@
   }
 
   // ---------------- leaderboard (name-gated, like the Daily 73-9) ----------------
-  let lbBoard = null, lbTab = 'day';
-  const LBL = { day: 'Today', week: 'This week', alltime: 'All-time', streak: 'Longest streaks' };
+  let lbBoard = null, lbTab = 'week';
+  const LBL = { week: 'Weekly league', day: 'Today', alltime: 'All-time', streak: 'Longest streaks' };
   async function api(path, body) {
     const r = await fetch(CFG.lbApi + path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : { cache: 'no-store' });
     return r.json();
@@ -717,8 +827,9 @@
   function lbRows() {
     const list = (lbBoard && lbBoard[lbTab]) || [];
     const me = savedName().name;
-    if (!list.length) return '<div class="empty">No named scores yet' + (lbTab === 'day' ? ' today' : '') + '. Add your name and be first.</div>';
-    return list.map((e, i) => '<div class="row' + (me && e.name === me ? ' me' : '') + '"><span class="rk mono">' + (i + 1) + '</span><span class="nm">' + esc(e.name) + (e.handle ? '<a href="https://x.com/' + encodeURIComponent(e.handle) + '" target="_blank" rel="noopener">@' + esc(e.handle) + '</a>' : '') + '</span><span class="sc mono">' + (lbTab === 'streak' ? e.streak + '<small>in a row</small>' : fmt(e.score) + '<small>' + e.correct + ' duos</small>') + '</span></div>').join('');
+    if (!list.length) return '<div class="empty">No named scores yet' + (lbTab === 'day' ? ' today' : lbTab === 'week' ? ' this week' : '') + '. Add your name and be first.</div>';
+    const note = lbTab === 'week' ? '<div class="empty" style="padding:0 0 6px">Resets every Monday. Best game per player.</div>' : '';
+    return note + list.map((e, i) => '<div class="row' + (me && e.name === me ? ' me' : '') + '"><span class="rk mono">' + (i + 1) + '</span><span class="nm">' + esc(e.name) + (e.handle ? '<a href="https://x.com/' + encodeURIComponent(e.handle) + '" target="_blank" rel="noopener">@' + esc(e.handle) + '</a>' : '') + '</span><span class="sc mono">' + (lbTab === 'streak' ? e.streak + '<small>in a row</small>' : fmt(e.score) + '<small>' + e.correct + ' duos</small>') + '</span></div>').join('');
   }
   function lbRender(rank, gateMsg) {
     const panel = $('lbPanel');
@@ -726,14 +837,15 @@
     let rankLine = '';
     if (rank) {
       const parts = [];
-      for (const w of ['day', 'week', 'alltime']) if (rank[w]) parts.push(LBL[w] + ': <b>#' + rank[w].rank + '</b> of ' + fmt(rank[w].of));
+      const RL = { day: 'Today', week: 'This week', alltime: 'All-time' };
+      for (const w of ['day', 'week', 'alltime']) if (rank[w]) parts.push(RL[w] + ': <b>#' + rank[w].rank + '</b> of ' + fmt(rank[w].of));
       if (parts.length) rankLine = '<div class="rankline">Where this game ranks — ' + parts.join(' · ') + '</div>';
     }
     const gate = nm.name
       ? '<div class="rankline">Playing as <b>' + esc(nm.name) + '</b>' + (nm.handle ? ' (@' + esc(nm.handle) + ')' : '') + ' · <a href="#" id="lbRename">change</a></div>'
       : '<div class="gate"><input id="lbName" maxlength="24" placeholder="Your name (shown on the board)"><input id="lbHandle" maxlength="30" placeholder="@handle (optional)"><button class="btn sm" id="lbSave">Save name</button></div><div class="gatemsg" id="lbGateMsg">Scores without a name count toward rank but never appear on the board.</div>';
     panel.innerHTML = '<div class="hdr">Leaderboard</div>' + rankLine + gate +
-      '<div class="tabs">' + ['day', 'week', 'alltime', 'streak'].map(k => '<button class="tab' + (k === lbTab ? ' on' : '') + '" data-tab="' + k + '">' + LBL[k] + '</button>').join('') + '</div>' +
+      '<div class="tabs">' + ['week', 'day', 'alltime', 'streak'].map(k => '<button class="tab' + (k === lbTab ? ' on' : '') + '" data-tab="' + k + '">' + LBL[k] + '</button>').join('') + '</div>' +
       '<div class="rows" id="lbRows">' + lbRows() + '</div>';
     if (gateMsg) { const g = $('lbGateMsg'); if (g) { g.textContent = gateMsg; g.classList.add('err'); } }
     panel.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { lbTab = b.dataset.tab; lbRender(rank); });
@@ -761,8 +873,8 @@
     panel.innerHTML = '<div class="hdr">Leaderboard</div><div class="empty">loading…</div>';
     const nm = savedName();
     try {
-      const d = await api('/claim', { id: deviceId(), name: nm.name, handle: nm.handle, score: S.score, correct: S.correct, questions: S.qn, streak: S.bestStreak, durationMs: Math.round(performance.now() - S.gameStart) });
-      if (d && d.ok) { lbBoard = d.board; S.lastClaim = d; lbRender(d.rank); return; }
+      const d = await api('/claim', { id: deviceId(), name: nm.name, handle: nm.handle, score: S.score, correct: S.correct, questions: S.qn, streak: S.bestStreak, durationMs: Math.round(performance.now() - S.gameStart), qs: S.log.slice(0, 400) });
+      if (d && d.ok) { lbBoard = d.board; S.lastClaim = d; if (d.dayStreak) { const l = localStreak(); if (d.dayStreak.cur > l.cur) { l.cur = d.dayStreak.cur; l.best = Math.max(l.best, d.dayStreak.best); lsSet(CFG.streakKey, JSON.stringify(l)); } paintStreak(d.dayStreak); } lbRender(d.rank); return; }
       // rejected (e.g. too fast) → still show the boards
       const b = await api('/board?id=' + encodeURIComponent(deviceId()));
       lbBoard = b; lbRender(null);
@@ -789,7 +901,7 @@
     if (S.locked && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); advance(); return; }
     if (!S.locked && /^[1-6]$/.test(e.key)) { const c = $('grid').children[+e.key - 1]; if (c) tap(+e.key - 1, c); }
   });
-  window.__beatLebronDebug = { generate, buildCard, POOL, METRICS, LB, S };   // console hooks for testing
+  window.__beatLebronDebug = { generate, buildCard, shareText, POOL, METRICS, LB, S };   // console hooks for testing
 })();
 </script>
 </body>
