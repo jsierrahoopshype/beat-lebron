@@ -331,20 +331,40 @@
   const POOL = BeatLebronGen.create(DATA, 'pool').POOL;
 
   // ---------------- identity (device id + saved name, like the 73-9 game) ----------------
+  // The id has to be the SAME for every request of a game: /start signs a token against it and
+  // /claim is checked against it, and the leaderboard files a score under it. localStorage can
+  // silently drop writes (origin over quota, site data blocked, private mode) while reads keep
+  // working, so an id that was only ever written to localStorage can come back different on the
+  // next call and every game looks like a new device. The id is therefore held in memory for the
+  // page, and mirrored to sessionStorage and a cookie so at least one of them survives a reload.
+  let DEVICE_ID = '';
+  function ckGet(k) { try { const m = document.cookie.match(new RegExp('(?:^|; )' + k + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; } catch (e) { return null; } }
+  function ckSet(k, v) { try { document.cookie = k + '=' + encodeURIComponent(v) + ';max-age=31536000;path=/;SameSite=Lax'; } catch (e) {} }
+  function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
   function deviceId() {
-    let id = lsGet(CFG.idKey);
-    if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(16) + Math.random().toString(16).slice(2))).replace(/-/g, '').slice(0, 24); lsSet(CFG.idKey, id); }
+    if (DEVICE_ID) return DEVICE_ID;
+    let id = lsGet(CFG.idKey) || ssGet(CFG.idKey) || ckGet(CFG.idKey);
+    if (!id || !/^[A-Za-z0-9_-]{8,40}$/.test(id)) id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(16) + Math.random().toString(16).slice(2))).replace(/-/g, '').slice(0, 24);
+    lsSet(CFG.idKey, id); ssSet(CFG.idKey, id); ckSet(CFG.idKey, id);
+    DEVICE_ID = id;
     return id;
   }
-  function savedName() { try { return JSON.parse(lsGet(CFG.nameKey) || 'null') || { name: '', handle: '' }; } catch (e) { return { name: '', handle: '' }; } }
-  function saveName(name, handle) { lsSet(CFG.nameKey, JSON.stringify({ name, handle })); }
+  // false when localStorage takes a write and loses it, which is how a full origin behaves
+  function storageWorks() {
+    try { localStorage.setItem('hm_bl_probe', '1'); const ok = localStorage.getItem('hm_bl_probe') === '1'; localStorage.removeItem('hm_bl_probe'); return ok; } catch (e) { return false; }
+  }
+  function savedName() {
+    try { const raw = lsGet(CFG.nameKey) || ckGet(CFG.nameKey); return JSON.parse(raw || 'null') || { name: '', handle: '' }; } catch (e) { return { name: '', handle: '' }; }
+  }
+  function saveName(name, handle) { const v = JSON.stringify({ name, handle }); lsSet(CFG.nameKey, v); ckSet(CFG.nameKey, v); }
 
   // ---------------- state ----------------
   const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], q: null, next: null, picks: [], locked: false, t0: 0, raf: 0, auto: 0, gameStart: 0, lastClaim: null };
   const screens = { intro: $('sIntro'), game: $('sGame'), over: $('sOver') };
   function show(name) { Object.keys(screens).forEach(k => screens[k].classList.toggle('on', k === name)); window.scrollTo(0, 0); }
 
-  let best = parseInt(lsGet(CFG.storageKey) || '0', 10) || 0;
+  let best = parseInt(lsGet(CFG.storageKey) || ckGet(CFG.storageKey) || '0', 10) || 0;
   function paintBest() {
     $('topBest').textContent = best ? 'Best ' + fmt(best) : '';
     $('introBest').innerHTML = best ? 'Your best: <b>' + fmt(best) + '</b>' : 'No score yet on this device';
@@ -567,7 +587,7 @@
   // ---------------- game over ----------------
   function gameOver() {
     const isBest = S.score > best;
-    if (isBest) { best = S.score; lsSet(CFG.storageKey, String(best)); paintBest(); }
+    if (isBest) { best = S.score; lsSet(CFG.storageKey, String(best)); ckSet(CFG.storageKey, String(best)); paintBest(); }
     $('finalScore').textContent = fmt(S.score);
     $('finalSub').textContent = S.correct === 1 ? '1 duo found before your lives ran out' : S.correct + ' duos found before your lives ran out';
     $('newBest').innerHTML = isBest && S.score > 0 ? '<span class="newbest">New best on this device</span>' : '';
@@ -783,7 +803,8 @@
     const gate = nm.name
       ? '<div class="rankline">Playing as <b>' + esc(nm.name) + '</b>' + (nm.handle ? ' (@' + esc(nm.handle) + ')' : '') + ' · <a href="#" id="lbRename">change</a></div>'
       : '<div class="gate"><input id="lbName" maxlength="24" placeholder="Your name (shown on the board)"><input id="lbHandle" maxlength="30" placeholder="@handle (optional)"><button class="btn sm" id="lbSave">Save name</button></div><div class="gatemsg" id="lbGateMsg">Scores without a name count toward rank but never appear on the board.</div>';
-    panel.innerHTML = '<div class="hdr">Leaderboard</div>' + rankLine + gate +
+    const storeWarn = storageWorks() ? '' : '<div class="gatemsg">This browser is not keeping site data for this page, so your name and best score will not survive a reload.</div>';
+    panel.innerHTML = '<div class="hdr">Leaderboard</div>' + rankLine + gate + storeWarn +
       '<div class="tabs">' + ['week', 'day', 'alltime', 'streak'].map(k => '<button class="tab' + (k === lbTab ? ' on' : '') + '" data-tab="' + k + '">' + LBL[k] + '</button>').join('') + '</div>' +
       '<div class="rows" id="lbRows">' + lbRows() + '</div>';
     if (gateMsg) { const g = $('lbGateMsg'); if (g) { g.textContent = gateMsg; g.classList.add('err'); } }
@@ -842,7 +863,7 @@
     if (S.locked && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); advance(); return; }
     if (!S.locked && /^[1-6]$/.test(e.key)) { const c = $('grid').children[+e.key - 1]; if (c) tap(+e.key - 1, c); }
   });
-  window.__beatLebronDebug = { generate, buildCard, shareText, POOL, METRICS, LB, S };   // console hooks for testing
+  window.__beatLebronDebug = { generate, buildCard, shareText, deviceId, storageWorks, POOL, METRICS, LB, S };   // console hooks for testing
 })();
 </script>
 </body>
