@@ -438,7 +438,7 @@
   async function start() {
     if (starting) return;
     starting = true;
-    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], picksLog: [], token: '', gameStart: performance.now(), lastClaim: null });
+    Object.assign(S, { lives: CFG.lives, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], picksLog: [], token: '', gameStart: performance.now(), lastClaim: null, claimError: '' });
     clearTimeout(S.auto);
     S.next = null;
     S.h2h = (CH && CH.seed && !S.usedChallenge) ? CH : null;
@@ -777,8 +777,9 @@
       const parts = [];
       const RL = { day: 'Today', week: 'This week', alltime: 'All-time' };
       for (const w of ['day', 'week', 'alltime']) if (rank[w]) parts.push(RL[w] + ': <b>#' + rank[w].rank + '</b> of ' + fmt(rank[w].of));
-      if (parts.length) rankLine = '<div class="rankline">Where this game ranks — ' + parts.join(' · ') + (S.lastClaim && S.lastClaim.verified ? ' · <span title="Replayed and checked by the server">verified</span>' : '') + (S.lastClaim && S.lastClaim.placed === false ? ' · not placed on the board (unverified high score)' : '') + '</div>';
+      if (parts.length) rankLine = '<div class="rankline">Where this game ranks — ' + parts.join(' · ') + (S.lastClaim && S.lastClaim.verified ? ' · <span title="Replayed and checked by the server">verified</span>' : S.lastClaim && S.lastClaim.why && S.lastClaim.why !== 'no token' ? ' · <span title="' + esc(S.lastClaim.why) + '">unverified</span>' : '') + (S.lastClaim && S.lastClaim.placed === false ? ' · not placed on the board (unverified high score)' : '') + '</div>';
     }
+    if (!rank && S.claimError) rankLine = '<div class="rankline">This game was not saved: ' + esc(S.claimError) + '</div>';
     const gate = nm.name
       ? '<div class="rankline">Playing as <b>' + esc(nm.name) + '</b>' + (nm.handle ? ' (@' + esc(nm.handle) + ')' : '') + ' · <a href="#" id="lbRename">change</a></div>'
       : '<div class="gate"><input id="lbName" maxlength="24" placeholder="Your name (shown on the board)"><input id="lbHandle" maxlength="30" placeholder="@handle (optional)"><button class="btn sm" id="lbSave">Save name</button></div><div class="gatemsg" id="lbGateMsg">Scores without a name count toward rank but never appear on the board.</div>';
@@ -813,7 +814,9 @@
     try {
       const d = await api('/claim', { id: deviceId(), name: nm.name, handle: nm.handle, score: S.score, correct: S.correct, questions: S.qn, streak: S.bestStreak, durationMs: Math.round(performance.now() - S.gameStart), qs: S.log.slice(0, 400), seed, token: S.token || undefined, picks: S.token ? S.picksLog : undefined, dv: DATA.generated, gv: BeatLebronGen.GEN_VERSION });
       if (d && d.ok) { lbBoard = d.board; S.lastClaim = d; if (d.dayStreak) { const l = localStreak(); if (d.dayStreak.cur > l.cur) { l.cur = d.dayStreak.cur; l.best = Math.max(l.best, d.dayStreak.best); lsSet(CFG.streakKey, JSON.stringify(l)); } paintStreak(d.dayStreak); } lbRender(d.rank); return; }
-      // rejected (e.g. too fast) → still show the boards
+      // rejected (e.g. too fast) → still show the boards, and say why the score was not saved
+      S.claimError = (d && d.error) ? String(d.error) : 'no answer from the leaderboard';
+      console.warn('Beat LeBron: claim rejected', d);
       const b = await api('/board?id=' + encodeURIComponent(deviceId()));
       lbBoard = b; lbRender(null);
     } catch (e) {
