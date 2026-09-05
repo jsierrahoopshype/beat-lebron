@@ -24,6 +24,16 @@ FONTS = {
     "BarlowCondensed-Bold.ttf": "https://raw.githubusercontent.com/google/fonts/main/ofl/barlowcondensed/BarlowCondensed-Bold.ttf",
 }
 HEADSHOT = "https://raw.githubusercontent.com/jsierrahoopshype/nba-headshots/main/players/headshots/face2/2544-lebron-james.png"
+# The medallion is cut from the licensed hero photo when it is there: the CDN headshot is a square
+# with empty space above the head and a hard edge below it, which left black bands inside the disc.
+def _face_src():
+    for c in (os.path.join(HERE, "lebron-hero.jpg"),
+              os.path.join(HERE, "..", "beat-lebron", "lebron-hero.jpg"),
+              os.path.join(HERE, "..", "lebron-hero.jpg")):
+        if os.path.exists(c):
+            return c
+    return ""
+FACE_SRC = _face_src()
 
 
 def fetch(url):
@@ -57,7 +67,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--photo", help="licensed photo to use full-bleed on the right (jpg/png)")
     ap.add_argument("--title", default="BEAT LEBRON")
-    ap.add_argument("--hook", default="Pick the two All-Stars who out-stat the King. Only one duo works.")
+    ap.add_argument("--hook", default="Pick the two All-Stars who out-stat LeBron James. Only one duo works.")
+    ap.add_argument("--face", help="photo to cut the medallion from (default: the hero photo in the game repo)")
+    ap.add_argument("--facezoom", type=float, default=0.78, help="square crop side as a share of the photo width")
+    ap.add_argument("--facex", type=float, default=0.50, help="crop centre x, 0-1")
+    ap.add_argument("--facey", type=float, default=0.20, help="crop centre y, 0-1")
     ap.add_argument("--out", default=os.path.join(HERE, "og-beat-lebron.png"))
     a = ap.parse_args()
 
@@ -81,8 +95,19 @@ def main():
         im.alpha_composite(ph, (max(x0, W - int(W * .58)), 0))
         text_w = W - int(W * .55)
     else:
-        face = Image.open(io.BytesIO(fetch(HEADSHOT))).convert("RGBA")
         D = 470
+        src_path = a.face or FACE_SRC
+        if src_path and os.path.exists(src_path):
+            # square crop around the head, so the photo fills the whole disc edge to edge
+            src = Image.open(src_path).convert("RGB")
+            side = int(src.width * a.facezoom)
+            cx = int(src.width * a.facex)
+            cy = int(src.height * a.facey)
+            x0 = max(0, min(src.width - side, cx - side // 2))
+            y0 = max(0, min(src.height - side, cy - side // 2))
+            face = src.crop((x0, y0, x0 + side, y0 + side)).convert("RGBA")
+        else:
+            face = Image.open(io.BytesIO(fetch(HEADSHOT))).convert("RGBA")
         face = face.resize((D, D), Image.LANCZOS)
         cx, cy = W - 300, H // 2
         # glow + ring + clipped face
@@ -90,8 +115,9 @@ def main():
         ring = Image.new("RGBA", (D + 28, D + 28), (0, 0, 0, 0))
         ImageDraw.Draw(ring).ellipse((0, 0, D + 27, D + 27), fill=GOLD + (255,))
         im.alpha_composite(ring, (cx - (D + 28) // 2, cy - (D + 28) // 2))
-        # zoom 1.15 around the centre so the headshot's hard bottom edge falls outside the disc
-        Z = int(D * 1.15)
+        # a photo crop already fills the disc; the CDN headshot still needs the 1.15 zoom so its
+        # hard bottom edge falls outside the circle
+        Z = int(D * (1.0 if (src_path and os.path.exists(src_path)) else 1.15))
         big = face.resize((Z, Z), Image.LANCZOS)
         disc = Image.new("RGBA", (D, D), (0, 0, 0, 0))
         disc.alpha_composite(big, ((D - Z) // 2, (D - Z) // 2))
