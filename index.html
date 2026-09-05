@@ -32,19 +32,25 @@
   .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 4px 0 10px; min-height: 22px; }
 
   /* ---------- intro ---------- */
-  /* Intro: set like a sports page, not a landing page. Flush-left headline, a rule under it,
-     the worked example as a scoreline block. No hero card, no glow, no three-up feature boxes. */
-  .headrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  /* Intro: the black card, kept. What went is the gold glow behind the headline (a gradient blob
+     doing the work a photograph should do) and the three feature boxes. LeBron's headshot takes the
+     top-right instead, the game's terms are one line under the button, and the worked example below
+     is a scoreline block rather than a paragraph. */
+  .hero { background: var(--ink); color: #fff; border-radius: 22px; padding: 26px 24px 24px; box-shadow: var(--shadow); }
+  .headrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; border-bottom: 1px solid rgba(255,255,255,.16); padding-bottom: 18px; }
   .headrow > div { min-width: 0; }
-  .kicker { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); }
+  .kicker { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; color: rgba(255,255,255,.5); }
   .kicker:after { content: ""; display: block; width: 30px; height: 3px; background: var(--gold); margin-top: 9px; }
-  .lede h1 { margin: 13px 0 0; font-size: clamp(36px, 8.2vw, 62px); line-height: .88; font-weight: 800; text-transform: uppercase; }
-  .lbportrait { width: 104px; height: 104px; border-radius: 50%; object-fit: cover; flex: none; background: var(--line); margin-bottom: -34px; box-shadow: 0 0 0 5px var(--bg); }
-  @media (max-width: 520px) { .lbportrait { width: 64px; height: 64px; margin-bottom: -20px; box-shadow: 0 0 0 4px var(--bg); } }
-  .stand { margin: 18px 0 0; font-size: 17px; color: var(--ink-2); max-width: 48ch; }
-  .terms { font-size: 13px; color: var(--ink-3); }
-  .introbest { margin-top: 12px; font-size: 13px; }
-  .challenge { margin: 16px 0 0; background: #fdf6df; border-left: 3px solid var(--gold); color: var(--ink); border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 15px; font-weight: 600; display: none; }
+  .hero h1 { margin: 13px 0 0; font-size: clamp(38px, 8.4vw, 64px); line-height: .9; font-weight: 800; text-transform: uppercase; }
+  .hero h1 span { color: var(--gold); }
+  .lbportrait { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; flex: none; background: #26262e; margin-bottom: -30px; box-shadow: 0 0 0 5px var(--ink); }
+  @media (max-width: 520px) { .lbportrait { width: 68px; height: 68px; margin-bottom: -20px; box-shadow: 0 0 0 4px var(--ink); } }
+  .stand { margin: 18px 0 0; font-size: 17px; color: #d8d8e0; max-width: 48ch; }
+  .terms { font-size: 13px; color: #a3a3b2; }
+  .introbest { margin-top: 14px; font-size: 13px; }
+  .hero .best { color: #a3a3b2; }
+  .hero .best b { color: #fff; }
+  .challenge { margin: 16px 0 0; background: rgba(242,183,5,.12); border-left: 3px solid var(--gold); color: #ffe6a3; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 15px; font-weight: 600; display: none; }
   .challenge.on { display: block; }
   .cta { margin-top: 24px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   .btn { border: 0; border-radius: 999px; padding: 14px 26px; font-weight: 700; font-size: 17px; background: var(--gold); color: var(--ink); transition: transform .08s ease, filter .15s ease; }
@@ -64,7 +70,7 @@
   .spec .r.win .t { color: var(--green); }
   .spec .r.lose .t { color: var(--ink-3); }
   .spec .note { padding: 12px 16px 13px; font-size: 13px; color: var(--ink-3); }
-  .streakline { margin-top: 16px; display: none; align-items: center; gap: 10px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 2px; font-size: 15px; color: var(--ink-2); }
+  .streakline { margin-top: 16px; display: none; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); padding: 10px 2px; font-size: 15px; color: #d8d8e0; }
   .streakline.on { display: flex; }
   .streakline b { color: var(--gold); font-size: 22px; }
   .tier { display: inline-block; margin-top: 10px; border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
@@ -215,11 +221,11 @@
 
   <!-- ================= INTRO ================= -->
   <section class="screen on" id="sIntro">
-    <div class="lede">
+    <div class="hero">
       <div class="headrow">
         <div>
           <div class="kicker">NBA duo quiz</div>
-          <h1 class="cond">Two All-Stars<br>vs. the King</h1>
+          <h1 class="cond">Two All-Stars<br>vs. <span>The King</span></h1>
         </div>
         <img class="lbportrait" id="introFace" alt="LeBron James" onerror="this.style.display='none'">
       </div>
