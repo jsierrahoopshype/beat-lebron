@@ -32,45 +32,28 @@
   .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 4px 0 10px; min-height: 22px; }
 
   /* ---------- intro ---------- */
-  /* Intro: the black card, kept. What went is the gold glow behind the headline (a gradient blob
-     doing the work a photograph should do) and the three feature boxes. LeBron's headshot takes the
-     top-right instead, the game's terms are one line under the button, and the worked example below
-     is a scoreline block rather than a paragraph. */
-  .hero { background: var(--ink); color: #fff; border-radius: 22px; padding: 26px 24px 24px; box-shadow: var(--shadow); }
-  .headrow { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; border-bottom: 1px solid rgba(255,255,255,.16); padding-bottom: 18px; }
-  .headrow > div { min-width: 0; }
-  .kicker { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; color: rgba(255,255,255,.5); }
-  .kicker:after { content: ""; display: block; width: 30px; height: 3px; background: var(--gold); margin-top: 9px; }
-  .hero h1 { margin: 13px 0 0; font-size: clamp(38px, 8.4vw, 64px); line-height: .9; font-weight: 800; text-transform: uppercase; }
+  .hero { background: var(--ink); color: #fff; border-radius: 22px; padding: 28px 24px 26px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .hero:before { content: ""; position: absolute; inset: -40% -20% auto auto; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(242,183,5,.35), transparent 65%); pointer-events: none; }
+  .hero h1 { margin: 0; font-size: clamp(44px, 9vw, 72px); line-height: .92; font-weight: 800; text-transform: uppercase; }
   .hero h1 span { color: var(--gold); }
-  .lbportrait { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; flex: none; background: #26262e; margin-bottom: -30px; box-shadow: 0 0 0 5px var(--ink); }
-  @media (max-width: 520px) { .lbportrait { width: 68px; height: 68px; margin-bottom: -20px; box-shadow: 0 0 0 4px var(--ink); } }
-  .stand { margin: 18px 0 0; font-size: 17px; color: #d8d8e0; max-width: 48ch; }
-  .terms { font-size: 13px; color: #a3a3b2; }
-  .introbest { margin-top: 14px; font-size: 13px; }
-  .hero .best { color: #a3a3b2; }
-  .hero .best b { color: #fff; }
-  .challenge { margin: 16px 0 0; background: rgba(242,183,5,.12); border-left: 3px solid var(--gold); color: #ffe6a3; border-radius: 0 8px 8px 0; padding: 10px 14px; font-size: 15px; font-weight: 600; display: none; }
+  .hero p { margin: 14px 0 0; font-size: 17px; color: #d8d8e0; max-width: 520px; }
+  .challenge { margin: 14px 0 0; background: rgba(242,183,5,.14); border: 1px solid rgba(242,183,5,.45); color: #ffe38a; border-radius: 12px; padding: 10px 14px; font-size: 15px; font-weight: 600; display: none; }
   .challenge.on { display: block; }
-  .cta { margin-top: 24px; display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+  .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
+  .rule { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 12px 12px 10px; }
+  .rule b { display: block; font-size: 30px; line-height: 1; font-weight: 800; }
+  .rule span { display: block; font-size: 12px; color: #b9b9c6; margin-top: 4px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+  .cta { margin-top: 22px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
   .btn { border: 0; border-radius: 999px; padding: 14px 26px; font-weight: 700; font-size: 17px; background: var(--gold); color: var(--ink); transition: transform .08s ease, filter .15s ease; }
   .btn:hover { filter: brightness(1.05); }
   .btn:active { transform: scale(.97); }
   .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
   .btn.sm { padding: 10px 16px; font-size: 14px; }
-  .best { font-size: 14px; color: var(--ink-3); }
-  .best b { color: var(--ink); font-weight: 700; }
-  .spec { margin-top: 26px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
-  .spec .h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--line); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--ink-3); }
-  .spec .h b { color: var(--ink); font-size: 14px; letter-spacing: 0; }
-  .spec .r { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 13px 16px; border-bottom: 1px solid var(--line); font-size: 15px; }
-  .spec .r .p b { font-weight: 700; color: var(--ink-3); font-size: 13px; margin-left: 3px; }
-  .spec .r .t { font-weight: 800; font-size: 19px; flex: none; }
-  .spec .r.win { background: var(--green-bg); }
-  .spec .r.win .t { color: var(--green); }
-  .spec .r.lose .t { color: var(--ink-3); }
-  .spec .note { padding: 12px 16px 13px; font-size: 13px; color: var(--ink-3); }
-  .streakline { margin-top: 16px; display: none; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); padding: 10px 2px; font-size: 15px; color: #d8d8e0; }
+  .best { font-size: 14px; color: #b9b9c6; }
+  .best b { color: #fff; }
+  .example { margin-top: 18px; background: var(--card); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); font-size: 15px; color: var(--ink-2); }
+  .example b { color: var(--ink); }
+  .streakline { margin-top: 14px; display: none; align-items: center; gap: 10px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 10px 14px; font-size: 15px; color: #d8d8e0; }
   .streakline.on { display: flex; }
   .streakline b { color: var(--gold); font-size: 22px; }
   .tier { display: inline-block; margin-top: 10px; border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
@@ -222,27 +205,22 @@
   <!-- ================= INTRO ================= -->
   <section class="screen on" id="sIntro">
     <div class="hero">
-      <div class="headrow">
-        <div>
-          <div class="kicker">NBA duo quiz</div>
-          <h1 class="cond">Two All-Stars<br>vs. <span>The King</span></h1>
-        </div>
-        <img class="lbportrait" id="introFace" alt="LeBron James" onerror="this.style.display='none'">
-      </div>
-      <p class="stand">Six All-Stars, one stat. Pick the two whose combined careers pass LeBron James. Exactly one pair does.</p>
+      <h1 class="cond">Two All-Stars<br>vs. <span>The King</span></h1>
+      <p>We show you six All-Stars. Pick the two whose combined stats or accolades beat LeBron James alone. Only one duo gets there. Every other pair falls short.</p>
       <div class="challenge" id="challenge"></div>
       <div class="streakline" id="streakLine"></div>
+      <div class="rules">
+        <div class="rule"><b class="cond">5</b><span>Lives</span></div>
+        <div class="rule"><b class="cond">15s</b><span>Per question</span></div>
+        <div class="rule"><b class="cond">Speed</b><span>= points</span></div>
+      </div>
       <div class="cta">
         <button class="btn" id="btnStart">Play</button>
-        <span class="terms">5 lives · 15 seconds a question · faster answers score more</span>
+        <span class="best" id="introBest"></span>
       </div>
-      <div class="introbest"><span class="best" id="introBest"></span></div>
     </div>
-    <div class="spec">
-      <div class="h"><span>All-Star selections</span><span>LeBron James <b class="mono" id="specLb">22</b></span></div>
-      <div class="r win"><span class="p" id="specWin">Michael Jordan <b class="mono">14</b> + Russell Westbrook <b class="mono">9</b></span><span class="t mono" id="specWinT">23</span></div>
-      <div class="r lose"><span class="p" id="specLose">Michael Jordan <b class="mono">14</b> + Blake Griffin <b class="mono">6</b></span><span class="t mono" id="specLoseT">20</span></div>
-      <div class="note">Tap two names. The answer locks in on the second tap.</div>
+    <div class="example">
+      <b>Example:</b> "Pick the two players who combine for more All-Star selections than LeBron James (22)." Michael Jordan (14) and Russell Westbrook (9) get you to 23. Jordan plus Blake Griffin (6) stalls at 20. Tap two names, the answer locks in on the second tap.
     </div>
     <div class="todaybest" id="todayBest"></div>
   </section>
@@ -470,30 +448,7 @@
     if (!p.h) return '<div class="face"><img alt="" src="' + SIL + '"></div>';
     return '<div class="face"><img alt="" decoding="async" src="' + faceUrl(p) + '" data-alt="' + faceAlt(p) + '" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt=\'\';}else{this.onerror=null;this.src=\'' + SIL + '\';}"></div>';
   }
-  // The worked example on the intro is filled from the data file, so it stays true after every
-  // daily refresh instead of being three numbers frozen in the markup.
-  (function fillSpec() {
-    try {
-      const mi = METRICS.findIndex(m => m.k === 'asg');
-      if (mi < 0) return;
-      const find = n => POOL.find(p => p.n === n);
-      const A = find('Michael Jordan'), B = find('Russell Westbrook'), C = find('Blake Griffin');
-      if (!A || !B || !C) return;
-      const v = p => p.v[mi];
-      $('specLb').textContent = fmt(LB.v[mi]);
-      $('specWin').innerHTML = esc(A.n) + ' <b class="mono">' + v(A) + '</b> + ' + esc(B.n) + ' <b class="mono">' + v(B) + '</b>';
-      $('specWinT').textContent = fmt(v(A) + v(B));
-      $('specLose').innerHTML = esc(A.n) + ' <b class="mono">' + v(A) + '</b> + ' + esc(C.n) + ' <b class="mono">' + v(C) + '</b>';
-      $('specLoseT').textContent = fmt(v(A) + v(C));
-    } catch (e) { /* markup keeps its written-in numbers */ }
-  })();
-
-  if (LB.h) {
-    $('lbFace').src = CFG.headshotBase + 'face/' + LB.h;
-    const introFace = $('introFace');
-    introFace.src = faceUrl(LB);
-    introFace.onerror = function () { this.onerror = null; this.src = faceAlt(LB); };
-  } else { $('lbFace').style.display = 'none'; const f = $('introFace'); if (f) f.style.display = 'none'; }
+  if (LB.h) $('lbFace').src = CFG.headshotBase + 'face/' + LB.h; else $('lbFace').style.display = 'none';
 
   // ---------------- game flow ----------------
   let starting = false;
