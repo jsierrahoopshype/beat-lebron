@@ -1,12 +1,32 @@
 # Lives in the beat-lebron repo at .github/workflows/beat-lebron-reveal.yml; the script is bot/post_hardest.py.
+#
+# Posts yesterday's most-missed Beat LeBron question every morning.
+#
 # Secrets needed in this repo (Settings > Secrets and variables > Actions):
 #   BSKY_HANDLE, BSKY_APP_PASSWORD, and optionally X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET.
-# DRY_RUN is "1" until you change it below: the run prints the post and sends nothing.
+#
+# The scheduled run is a DRY RUN until dry_run's default below is changed to "0": it prints the post
+# and sends nothing. Running it by hand from the Actions tab lets you override the dry run, the
+# minimum number of games, and which day to read — handy while traffic is still small, since the
+# scheduled run skips any day with fewer than 25 games.
 name: Beat LeBron reveal post
 on:
   schedule:
     - cron: "5 13 * * *"    # 13:05 UTC = 9:05 AM EDT (10:05 AM in winter; adjust to "5 14 * * *" after the November clock change if you want it fixed at 9:05 ET)
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: '1 = print the post only, 0 = actually post it'
+        default: '1'
+        required: false
+      min_plays:
+        description: 'minimum games that day before posting (scheduled runs use 25)'
+        default: '25'
+        required: false
+      day:
+        description: 'day to read, YYYY-MM-DD (blank = yesterday)'
+        default: ''
+        required: false
 jobs:
   post:
     runs-on: ubuntu-latest
@@ -18,8 +38,10 @@ jobs:
       - run: pip install -r bot/requirements.txt
       - run: python bot/post_hardest.py
         env:
-          DRY_RUN: "1"
-          MIN_PLAYS: "25"
+          # on the schedule github.event.inputs is empty, so these fall back to the safe defaults
+          DRY_RUN: ${{ github.event.inputs.dry_run || '1' }}
+          MIN_PLAYS: ${{ github.event.inputs.min_plays || '25' }}
+          DAY: ${{ github.event.inputs.day }}
           BSKY_HANDLE: ${{ secrets.BSKY_HANDLE }}
           BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
