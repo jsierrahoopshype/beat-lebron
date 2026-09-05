@@ -32,11 +32,32 @@
   .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 4px 0 10px; min-height: 22px; }
 
   /* ---------- intro ---------- */
-  .hero { background: var(--ink); color: #fff; border-radius: 22px; padding: 28px 24px 26px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
-  .hero:before { content: ""; position: absolute; inset: -40% -20% auto auto; width: 320px; height: 320px; border-radius: 50%; background: radial-gradient(circle, rgba(242,183,5,.35), transparent 65%); pointer-events: none; }
-  .hero h1 { margin: 0; font-size: clamp(44px, 9vw, 72px); line-height: .92; font-weight: 800; text-transform: uppercase; }
-  .hero h1 span { color: var(--gold); }
-  .hero p { margin: 14px 0 0; font-size: 17px; color: #d8d8e0; max-width: 520px; }
+  /* Hero: LeBron bleeds off the right edge of the black card. The gold glow sits behind his head
+     as a rim light rather than floating on its own, and a left-to-right scrim keeps the type legible
+     over the photo at every width. Layers: glow 0, photo 1, scrim 2, words 3. */
+  .hero { background: var(--ink); color: #fff; border-radius: 22px; padding: 28px 24px 26px; box-shadow: var(--shadow); position: relative; overflow: hidden; isolation: isolate; }
+  .hero:before { content: ""; position: absolute; inset: -22% -14% auto auto; width: 300px; height: 300px; border-radius: 50%; background: radial-gradient(circle, rgba(242,183,5,.5), transparent 62%); pointer-events: none; z-index: 0; }
+  .hero:after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: linear-gradient(100deg, var(--ink) 34%, rgba(17,17,20,.62) 56%, rgba(17,17,20,0) 76%); }
+  .heroimg { position: absolute; top: 0; right: -4px; height: 100%; width: 44%; max-width: 330px; object-fit: cover; object-position: 50% 6%; z-index: 1; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.4) 26%, #000 64%);
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.4) 26%, #000 64%); }
+  .heroin { position: relative; z-index: 3; max-width: 66%; }
+  .hero h1 { margin: 0; font-size: clamp(46px, 10vw, 82px); line-height: .86; font-weight: 800; text-transform: uppercase; }
+  .herosub { margin: 10px 0 0; font-size: clamp(17px, 2.9vw, 24px); line-height: 1.08; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #e6e6ee; }
+  .herosub span { color: var(--gold); }
+  .hero p { margin: 16px 0 0; font-size: 17px; color: #d8d8e0; }
+  @media (max-width: 640px) {
+    /* On a phone the photo cannot be a portrait beside the type, there is no room. It becomes the
+       texture of the card instead: still LeBron, still the Lakers gold, but pushed under a heavier
+       scrim that also darkens the foot of the card so the rules and the button sit on flat black. */
+    .heroin { max-width: 100%; }
+    .heroimg { width: 62%; max-width: 250px; object-position: 50% 10%; }
+    .hero:after { background:
+      linear-gradient(to bottom, rgba(17,17,20,0) 34%, rgba(17,17,20,.86) 72%, var(--ink) 92%),
+      linear-gradient(100deg, var(--ink) 42%, rgba(17,17,20,.8) 68%, rgba(17,17,20,.5) 100%); }
+    .hero p { max-width: 92%; }
+  }
   .challenge { margin: 14px 0 0; background: rgba(242,183,5,.14); border: 1px solid rgba(242,183,5,.45); color: #ffe38a; border-radius: 12px; padding: 10px 14px; font-size: 15px; font-weight: 600; display: none; }
   .challenge.on { display: block; }
   .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0 0; }
@@ -205,18 +226,25 @@
   <!-- ================= INTRO ================= -->
   <section class="screen on" id="sIntro">
     <div class="hero">
-      <h1 class="cond">Two All-Stars<br>vs. <span>The King</span></h1>
-      <p>We show you six All-Stars. Pick the two whose combined stats or accolades beat LeBron James alone. Only one duo gets there. Every other pair falls short.</p>
-      <div class="challenge" id="challenge"></div>
-      <div class="streakline" id="streakLine"></div>
-      <div class="rules">
-        <div class="rule"><b class="cond">5</b><span>Lives</span></div>
-        <div class="rule"><b class="cond">15s</b><span>Per question</span></div>
-        <div class="rule"><b class="cond">Speed</b><span>= points</span></div>
-      </div>
-      <div class="cta">
-        <button class="btn" id="btnStart">Play</button>
-        <span class="best" id="introBest"></span>
+      <picture>
+        <source srcset="lebron-hero.webp" type="image/webp">
+        <img class="heroimg" src="lebron-hero.jpg" alt="LeBron James" decoding="async" fetchpriority="high">
+      </picture>
+      <div class="heroin">
+        <h1 class="cond">Beat LeBron</h1>
+        <div class="herosub cond">Two All-Stars vs. <span>The King</span></div>
+        <p>We show you six All-Stars. Pick the two whose combined stats or accolades beat LeBron James alone. Only one duo gets there. Every other pair falls short.</p>
+        <div class="challenge" id="challenge"></div>
+        <div class="streakline" id="streakLine"></div>
+        <div class="rules">
+          <div class="rule"><b class="cond">5</b><span>Lives</span></div>
+          <div class="rule"><b class="cond">15s</b><span>Per question</span></div>
+          <div class="rule"><b class="cond">Speed</b><span>= points</span></div>
+        </div>
+        <div class="cta">
+          <button class="btn" id="btnStart">Play</button>
+          <span class="best" id="introBest"></span>
+        </div>
       </div>
     </div>
     <div class="example">
