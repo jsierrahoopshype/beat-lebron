@@ -22,11 +22,16 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: "DM Sans", system-ui, -apple-system, Segoe UI, sans-serif; font-size: 16px; line-height: 1.4; }
+  /* Nothing here is meant to be wider than the screen, and a few stray pixels anywhere (an animated
+     card, a long name, the site nav above this page) turn a phone into something that slides left
+     and right. clip, not hidden: hidden would force overflow-y to auto and make this a scroll
+     container, which breaks the sticky site nav. clip just refuses to scroll sideways. */
+  html, body { overflow-x: clip; max-width: 100%; }
   body { min-height: 100svh; display: flex; flex-direction: column; }
   .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; }
   .cond { font-family: "Barlow Condensed", "DM Sans", sans-serif; letter-spacing: .01em; }
   button { font: inherit; cursor: pointer; }
-  .wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 40px; flex: 1; display: flex; flex-direction: column; }
+  .wrap { width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 40px; flex: 1; display: flex; flex-direction: column; overflow-x: clip; }
   .screen { display: none; flex: 1; flex-direction: column; }
   .screen.on { display: flex; }
   .topbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 4px 0 10px; min-height: 22px; }
