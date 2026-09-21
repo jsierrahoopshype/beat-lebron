@@ -322,7 +322,7 @@
   const CFG = {
     lives: 5,
     seconds: 15,
-    revealSeconds: 5,       // auto-advance after the reveal
+    revealSeconds: 4,       // auto-advance after the reveal (was 5, cut by 1s on Sept 22 2026)
     basePoints: 100,        // for a correct answer
     speedPoints: 100,       // extra, scaled by time left
     headshotBase: 'https://jsierrahoopshype.github.io/nba-headshots/players/headshots/',
@@ -664,8 +664,10 @@
     const url = shareURL(), text = shareText();
     const u = encodeURIComponent(url), t = encodeURIComponent(text), tu = encodeURIComponent(text + ' ' + url);
     switch (kind) {
-      case 'x': return 'https://twitter.com/intent/tweet?text=' + t + '&url=' + u;
-      case 'bsky': return 'https://bsky.app/intent/compose?text=' + tu;
+      // via=hoopshype makes X append "via @hoopshype", which tags the account
+      case 'x': return 'https://twitter.com/intent/tweet?text=' + t + '&url=' + u + '&via=hoopshype';
+      // Bluesky has no via param: the handle goes in the text, and the composer turns it into a mention
+      case 'bsky': return 'https://bsky.app/intent/compose?text=' + encodeURIComponent(text + ' ' + url + ' via @hoopshypeofficial.bsky.social');
       case 'fb': return 'https://www.facebook.com/sharer/sharer.php?u=' + u + '&quote=' + t;
       case 'wa': return 'https://wa.me/?text=' + tu;
       case 'reddit': return 'https://www.reddit.com/submit?url=' + u + '&title=' + t;
