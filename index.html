@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<script src="https://hoopsmatic.com/hoopsmatic-games.js" data-hm-game="beatlebron" data-hm-footer="auto" defer></script>
+<script src="https://hoopsmatic.com/hoopsmatic-games.js" data-hm-game="beatlebron" data-hm-footer="auto" data-hm-cards="auto" defer></script>
 <style>
   :root {
     --bg: #f5f5f7; --card: #ffffff; --ink: #111114; --ink-2: #4b4b55; --ink-3: #8a8a96; --line: #e2e2e8;
@@ -641,7 +641,6 @@
     $('remind').innerHTML = 'Day streak: <b>' + lst.cur + '</b>' + (lst.best > lst.cur ? ' (best ' + lst.best + ')' : '') + ' · <a href="' + icsHref() + '" download="beat-lebron-reminder.ics">add a daily 9:00 AM ET reminder</a> to keep it alive';
     show('over');
     lbInit();
-    if (window.HMGames) HMGames.playNext(document.getElementById('over'));
   }
 
   // ---------------- sharing (73-9 style: card preview, link, 6 platforms, download/copy/native) ----------------
