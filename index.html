@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- The hero photo is the page's largest element: fetch it first. Each preload matches the
+     <picture> source that width picks (640px file on phones, 820px above the 640px breakpoint);
+     a browser without AVIF skips these and the <picture> still falls back to WebP or JPG. -->
+<link rel="preload" as="image" href="lebron-hero-640.avif" type="image/avif" media="(max-width: 640px)" fetchpriority="high">
+<link rel="preload" as="image" href="lebron-hero.avif" type="image/avif" media="(min-width: 641px)" fetchpriority="high">
 <title>Beat LeBron: pick the two All-Stars who out-stat the King | HoopsMatic</title>
 <meta name="description" content="Six All-Stars, five lives, 15 seconds. Pick the two players whose combined stats or accolades beat LeBron James alone. Only one duo works.">
 <meta property="og:title" content="Beat LeBron: two All-Stars vs. the King">
@@ -236,8 +241,12 @@
   <section class="screen on" id="sIntro">
     <div class="hero">
       <picture>
+        <!-- Phones get a 640px version: there the photo sits under a heavy scrim. -->
+        <source media="(max-width: 640px)" srcset="lebron-hero-640.avif" type="image/avif">
+        <source media="(max-width: 640px)" srcset="lebron-hero-640.webp" type="image/webp">
+        <source srcset="lebron-hero.avif" type="image/avif">
         <source srcset="lebron-hero.webp" type="image/webp">
-        <img class="heroimg" src="lebron-hero.jpg" alt="LeBron James" decoding="async" fetchpriority="high">
+        <img class="heroimg" src="lebron-hero.jpg" alt="LeBron James" width="820" height="1139" loading="eager" fetchpriority="high">
       </picture>
       <div class="heroin">
         <h1 class="cond">Beat LeBron</h1>
