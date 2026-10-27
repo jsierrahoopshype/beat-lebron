@@ -381,17 +381,31 @@
   // silently drop writes (origin over quota, site data blocked, private mode) while reads keep
   // working, so an id that was only ever written to localStorage can come back different on the
   // next call and every game looks like a new device. The id is therefore held in memory for the
-  // page, and mirrored to sessionStorage and a cookie so at least one of them survives a reload.
+  // page, and mirrored to sessionStorage so it survives a reload.
   let DEVICE_ID = '';
+  // Until Oct 2026 the id, the name/handle and the best score were also mirrored to site-wide
+  // cookies. Nothing sets them any more. One-time cleanup on each visit: a cookie's value is copied
+  // into localStorage when localStorage doesn't have it (the best score: when the cookie's is
+  // higher), and the cookie is expired once localStorage reads back that value. If localStorage
+  // can't keep the write, the cookie stays and is still read below, so nothing is lost.
   function ckGet(k) { try { const m = document.cookie.match(new RegExp('(?:^|; )' + k + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; } catch (e) { return null; } }
-  function ckSet(k, v) { try { document.cookie = k + '=' + encodeURIComponent(v) + ';max-age=31536000;path=/;SameSite=Lax'; } catch (e) {} }
+  function ckExpire(k) { try { document.cookie = k + '=;max-age=0;path=/;SameSite=Lax'; } catch (e) {} }
+  [CFG.idKey, CFG.nameKey, CFG.storageKey].forEach(function (k) {
+    const c = ckGet(k);
+    if (c == null) return;
+    const cur = lsGet(k);
+    let want = cur || c;
+    if (k === CFG.storageKey && (parseInt(c, 10) || 0) > (parseInt(cur || '0', 10) || 0)) want = c;
+    if (want !== cur) lsSet(k, want);
+    if (lsGet(k) === want) ckExpire(k);
+  });
   function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
   function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
   function deviceId() {
     if (DEVICE_ID) return DEVICE_ID;
     let id = lsGet(CFG.idKey) || ssGet(CFG.idKey) || ckGet(CFG.idKey);
     if (!id || !/^[A-Za-z0-9_-]{8,40}$/.test(id)) id = (crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(16) + Math.random().toString(16).slice(2))).replace(/-/g, '').slice(0, 24);
-    lsSet(CFG.idKey, id); ssSet(CFG.idKey, id); ckSet(CFG.idKey, id);
+    lsSet(CFG.idKey, id); ssSet(CFG.idKey, id);
     DEVICE_ID = id;
     return id;
   }
@@ -402,7 +416,7 @@
   function savedName() {
     try { const raw = lsGet(CFG.nameKey) || ckGet(CFG.nameKey); return JSON.parse(raw || 'null') || { name: '', handle: '' }; } catch (e) { return { name: '', handle: '' }; }
   }
-  function saveName(name, handle) { const v = JSON.stringify({ name, handle }); lsSet(CFG.nameKey, v); ckSet(CFG.nameKey, v); }
+  function saveName(name, handle) { const v = JSON.stringify({ name, handle }); lsSet(CFG.nameKey, v); }
 
   // ---------------- state ----------------
   const S = { lives: 0, score: 0, qn: 0, correct: 0, streak: 0, bestStreak: 0, times: [], found: [], missed: [], log: [], q: null, next: null, picks: [], locked: false, t0: 0, raf: 0, auto: 0, gameStart: 0, lastClaim: null };
@@ -632,7 +646,7 @@
   // ---------------- game over ----------------
   function gameOver() {
     const isBest = S.score > best;
-    if (isBest) { best = S.score; lsSet(CFG.storageKey, String(best)); ckSet(CFG.storageKey, String(best)); paintBest(); }
+    if (isBest) { best = S.score; lsSet(CFG.storageKey, String(best)); paintBest(); }
     $('finalScore').textContent = fmt(S.score);
     $('finalSub').textContent = S.correct === 1 ? '1 duo found before your lives ran out' : S.correct + ' duos found before your lives ran out';
     $('newBest').innerHTML = isBest && S.score > 0 ? '<span class="newbest">New best on this device</span>' : '';
