@@ -126,7 +126,8 @@
   .q h2 { margin: 0; font-size: clamp(22px, 4.6vw, 30px); line-height: 1.15; font-weight: 700; letter-spacing: -.01em; }
   .q h2 mark { background: linear-gradient(transparent 60%, rgba(242,183,5,.55) 60%); color: inherit; padding: 0 2px; }
   .lb { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; background: var(--purple); color: #fff; border-radius: 999px; padding: 6px 14px 6px 6px; font-size: 14px; font-weight: 600; }
-  .lb img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #fff; }
+  .lb img, .lb .ini { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e8e8ed; }
+  .lb .ini { display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #6d6d7a; }
   .lb b { font-family: "JetBrains Mono", monospace; font-size: 15px; color: var(--gold); }
 
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -137,7 +138,7 @@
   .card.sel { border-color: var(--ink); background: #fffbe8; }
   .card .pick { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; display: none; align-items: center; justify-content: center; }
   .card.sel .pick { display: flex; }
-  .face { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; background: #e9e9ef; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #6d6d7a; flex: none; }
+  .face { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; background: #e8e8ed; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #6d6d7a; flex: none; }
   .face img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .name { margin-top: 7px; font-weight: 700; font-size: 14px; line-height: 1.15; }
   .span { margin-top: 3px; font-size: 12px; color: var(--ink-3); }
@@ -283,7 +284,7 @@
 
     <div class="q" id="qBlock">
       <h2 id="qText"></h2>
-      <div class="lb" id="lbChip"><img id="lbFace" alt="" onerror="this.style.display='none'"><span>LeBron James</span><b id="lbVal"></b></div>
+      <div class="lb" id="lbChip"><img id="lbFace" alt="" onerror="this.outerHTML='<span class=&quot;ini&quot;>LJ</span>'"><span>LeBron James</span><b id="lbVal"></b></div>
     </div>
     <div class="verdict" id="verdict"></div>
     <div class="next" id="nextRow" style="display:none">
@@ -499,18 +500,18 @@
     $('score').textContent = fmt(S.score);
     $('qnum').textContent = 'Q' + S.qn;
   }
-  // Uniform framing: face2-160/*.webp (160px re-crops of the face2 set, ~2KB each). Falls back to
-  // face/*.png (older, uneven framing) and finally to a neutral silhouette so every card looks alike.
-  const SIL = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><rect width="256" height="256" fill="#e9e9ef"/><path fill="#b9b9c6" d="M128 40c-24 0-42 20-42 46 0 17 8 30 18 39 3 2 5 5 6 8-28 9-48 33-52 62-2 9 6 18 15 18h110c9 0 17-9 15-18-4-29-24-53-52-62 1-3 3-6 6-8 10-9 18-22 18-39 0-26-18-46-42-46z"/></svg>');
-  const faceUrl = p => CFG.headshotBase + 'face2-160/' + p.h.replace(/\.png$/, '.webp');
-  const faceAlt = p => CFG.headshotBase + 'face/' + p.h;
+  // Headshots: face-fill/*.webp (160px; the face fills the circle), the one HoopsMatic look. The data
+  // names each player's face file; face-fill shares its name. No file (or one that fails): his initials
+  // in the same grey circle.
+  const faceUrl = p => CFG.headshotBase + 'face-fill/' + p.h.replace(/\.png$/, '.webp');
   const preloaded = new Set();
-  function preload(q) { if (!q) return; q.players.forEach(p => { if (p.h && !preloaded.has(p.h)) { preloaded.add(p.h); const im = new Image(); im.onerror = () => { im.onerror = null; im.src = faceAlt(p); }; im.src = faceUrl(p); } }); }
+  function preload(q) { if (!q) return; q.players.forEach(p => { if (p.h && !preloaded.has(p.h)) { preloaded.add(p.h); const im = new Image(); im.src = faceUrl(p); } }); }
   function faceHtml(p) {
-    if (!p.h) return '<div class="face"><img alt="" src="' + SIL + '"></div>';
-    return '<div class="face"><img alt="" decoding="async" src="' + faceUrl(p) + '" data-alt="' + faceAlt(p) + '" onerror="if(this.dataset.alt){this.src=this.dataset.alt;this.dataset.alt=\'\';}else{this.onerror=null;this.src=\'' + SIL + '\';}"></div>';
+    const ini = esc(initials(p.n));
+    if (!p.h) return '<div class="face">' + ini + '</div>';
+    return '<div class="face"><img alt="" decoding="async" src="' + faceUrl(p) + '" onerror="this.parentNode.textContent=\'' + ini + '\'"></div>';
   }
-  if (LB.h) $('lbFace').src = CFG.headshotBase + 'face/' + LB.h; else $('lbFace').style.display = 'none';
+  if (LB.h) $('lbFace').src = faceUrl(LB); else $('lbFace').outerHTML = '<span class="ini">LJ</span>';
 
   // ---------------- game flow ----------------
   let starting = false;
@@ -707,7 +708,7 @@
       if (!file) return res(null);
       const im = new Image(); im.crossOrigin = 'anonymous';
       im.onload = () => res(im); im.onerror = () => res(null);
-      im.src = CFG.headshotBase + 'face2/' + file;
+      im.src = CFG.headshotBase + 'face-fill-320/' + file.replace(/\.png$/, '.webp');
     });
   }
   // 1080x1350 portrait card. High contrast, big type, always exactly the five misses
@@ -732,19 +733,17 @@
     ctx.fillStyle = '#f2b705'; ls('-1px'); fitText(ctx, 'BEAT LEBRON', W - 420, '800', 138, COND, 90); ctx.fillText('BEAT LEBRON', 64, 190); ls('0px');
     ctx.fillStyle = '#ffffff'; ls('3px'); fitText(ctx, 'TWO ALL-STARS VS. THE KING', W - 420, '700', 40, COND, 26); ctx.fillText('TWO ALL-STARS VS. THE KING', 66, 246); ls('0px');
 
-    // LeBron medallion: gradient disc, face, thick gold ring with glow
+    // LeBron medallion: grey disc, face, thick gold ring with glow
     const cx = W - 178, cy = 170, R = 112;
     const face = await loadFace(LB.h);
     ctx.save(); ctx.shadowColor = 'rgba(242,183,5,.55)'; ctx.shadowBlur = 40; ctx.fillStyle = '#f2b705'; ctx.beginPath(); ctx.arc(cx, cy, R + 10, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    const disc = ctx.createLinearGradient(cx - R, cy - R, cx + R, cy + R); disc.addColorStop(0, '#6a2fa3'); disc.addColorStop(1, '#2a1246');
-    ctx.fillStyle = disc; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3a3a44'; ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fill();   // neutral grey behind the face
     if (face) {
       ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.closePath(); ctx.clip();
-      const z = 1.15, sz = R * 2 * z;   // zoom around the centre: head stays whole, the crop's hard bottom edge leaves the disc
-      ctx.drawImage(face, cx - sz / 2, cy - sz / 2, sz, sz);
+      ctx.drawImage(face, cx - R, cy - R, R * 2, R * 2);   // face-fill: the face already fills the circle
       ctx.restore();
     } else {
-      ctx.fillStyle = '#f2b705'; ctx.font = '800 96px ' + COND; ctx.textAlign = 'center'; ctx.fillText('LJ', cx, cy + 34); ctx.textAlign = 'left';
+      ctx.fillStyle = '#cfcff0'; ctx.font = '800 96px ' + COND; ctx.textAlign = 'center'; ctx.fillText('LJ', cx, cy + 34); ctx.textAlign = 'left';
     }
     ctx.strokeStyle = '#f2b705'; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, R + 4, 0, Math.PI * 2); ctx.stroke();
 
