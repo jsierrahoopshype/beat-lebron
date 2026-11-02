@@ -25,7 +25,10 @@ GAME_URL = "https://hoopsmatic.com/beat-lebron"
 
 
 def get(url):
-    with urllib.request.urlopen(url, timeout=60) as r:
+    # Cloudflare answers Python's default "Python-urllib" user agent with
+    # 403 (error 1010) on the leaderboard Worker, so name the bot instead.
+    req = urllib.request.Request(url, headers={"User-Agent": "beat-lebron-reveal-bot/1.0 (+https://hoopsmatic.com/beat-lebron)"})
+    with urllib.request.urlopen(req, timeout=60) as r:
         return r.read().decode("utf-8")
 
 
