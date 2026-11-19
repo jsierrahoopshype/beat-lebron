@@ -1,5 +1,7 @@
 # Beat LeBron
 
+Live on HoopsMatic: https://hoopsmatic.com/beat-lebron
+
 Six All-Stars, five lives, 15 seconds. Pick the two players whose combined stat or accolade beats LeBron James alone. Exactly one duo works.
 
 - `index.html` - the whole game (no framework, no build step)
