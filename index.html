@@ -368,7 +368,6 @@
   const hashSeed = BeatLebronGen.hashSeed;
   const fmt = n => Number(n).toLocaleString('en-US');
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-  function initials(n) { return n.split(/\s+/).map(w => w[0]).join('').slice(0, 3).toUpperCase(); }
   const $ = id => document.getElementById(id);
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1600); }
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -507,17 +506,16 @@
     $('qnum').textContent = 'Q' + S.qn;
   }
   // Headshots: face-fill/*.webp (160px; the face fills the circle), the one HoopsMatic look. The data
-  // names each player's face file; face-fill shares its name. No file (or one that fails): his initials
-  // in the same grey circle.
+  // names each player's face file; face-fill shares its name. No file (or one that fails): no face at
+  // all, never an initials circle (HoopsMatic-wide rule, Nov 2026).
   const faceUrl = p => CFG.headshotBase + 'face-fill/' + p.h.replace(/\.png$/, '.webp');
   const preloaded = new Set();
   function preload(q) { if (!q) return; q.players.forEach(p => { if (p.h && !preloaded.has(p.h)) { preloaded.add(p.h); const im = new Image(); im.src = faceUrl(p); } }); }
   function faceHtml(p) {
-    const ini = esc(initials(p.n));
-    if (!p.h) return '<div class="face">' + ini + '</div>';
-    return '<div class="face"><img alt="" decoding="async" src="' + faceUrl(p) + '" onerror="this.parentNode.textContent=\'' + ini + '\'"></div>';
+    if (!p.h) return '';
+    return '<div class="face"><img alt="" decoding="async" src="' + faceUrl(p) + '" onerror="this.parentNode.remove()"></div>';
   }
-  if (LB.h) $('lbFace').src = faceUrl(LB); else $('lbFace').outerHTML = '<span class="ini">LJ</span>';
+  if (LB.h) $('lbFace').src = faceUrl(LB); else $('lbFace').remove();
 
   // ---------------- game flow ----------------
   let starting = false;
