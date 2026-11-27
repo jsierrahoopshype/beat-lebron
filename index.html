@@ -898,6 +898,9 @@
     const nm = savedName();
     try {
       const d = await api('/claim', { id: deviceId(), name: nm.name, handle: nm.handle, score: S.score, correct: S.correct, questions: S.qn, streak: S.bestStreak, durationMs: Math.round(performance.now() - S.gameStart), qs: S.log.slice(0, 400), seed, token: S.token || undefined, picks: S.token ? S.picksLog : undefined, dv: DATA.generated, gv: BeatLebronGen.GEN_VERSION });
+      // HoopsMatic Badges: a verified game's sealed receipt goes to the shared games script, which sends it to
+      // hoopsmatic.com/badges when it could count. A game without a receipt changes nothing.
+      if (d && d.ok && d.badgeReceipt && window.HMGames && window.HMGames.badgeResult) { try { window.HMGames.badgeResult('beatlebron', d.badgeReceipt); } catch (e) {} }
       if (d && d.ok) { lbBoard = d.board; S.lastClaim = d; if (d.dayStreak) { const l = localStreak(); if (d.dayStreak.cur > l.cur) { l.cur = d.dayStreak.cur; l.best = Math.max(l.best, d.dayStreak.best); lsSet(CFG.streakKey, JSON.stringify(l)); } paintStreak(d.dayStreak); } lbRender(d.rank); return; }
       // rejected (e.g. too fast) → still show the boards, and say why the score was not saved
       S.claimError = (d && d.error) ? String(d.error) : 'no answer from the leaderboard';
